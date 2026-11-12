@@ -1,0 +1,1088 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05070e">
+<meta name="description" content="Live New York-time dashboard for an hourly compounding projection: $2,000 to $100,000 with a 90% reinvest / 10% withdraw split.">
+<title>Growth Reactor Ledger</title>
+<style>
+/* base reset */
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Oxanium:wght@500;700;800&display=swap">
+<style>
+/* Layout: HUD console. Header strip (name · live New York clock) → hero row: 24-hour reactor dial | today's ledger + goal → trajectory chart → day map | parameters. One committed dark world. */
+:root{
+  --void:#05070e;
+  --hull:#0a1020;
+  --hull-hi:#0f1830;
+  --line:#1e2b4c;
+  --ink:#e6edff;
+  --dim:#8d9bc4;
+  --faint:#5d6a93;
+  --ion:#7fe4ff;
+  --gold:#ffc45c;
+  --done:#ff4d6d;
+  --left:#34f0a2;
+  --f-display:"Oxanium","Chakra Petch",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Chakra Petch",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-data:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--void)}
+body{
+  margin:0;color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;
+  background-color:var(--void);
+  background-image:
+    radial-gradient(1100px 560px at 15% -12%, color-mix(in srgb, var(--ion) 11%, transparent), transparent 62%),
+    radial-gradient(800px 480px at 105% 0%, color-mix(in srgb, var(--done) 7%, transparent), transparent 60%),
+    linear-gradient(color-mix(in srgb, var(--line) 38%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--line) 38%, transparent) 1px, transparent 1px);
+  background-size:auto,auto,44px 44px,44px 44px;
+}
+.wrap{max-width:1280px;margin:0 auto;padding-block:22px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 24px}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.mark{width:46px;height:46px;flex:none}
+.m-line{fill:none;stroke:var(--ion);stroke-width:1.5}
+.m-faint{fill:none;stroke:var(--line);stroke-width:1.5}
+.m-core{fill:var(--ion)}
+h1{margin:0;font-family:var(--f-display);font-weight:800;font-size:clamp(20px,3.2vw,28px);letter-spacing:.08em;text-transform:uppercase;line-height:1.1;text-wrap:balance}
+h1 span{color:var(--ion);margin:0 .1em}
+.sub{margin:4px 0 0;color:var(--dim);font-size:13px}
+.clock{text-align:right}
+.clock-label{font-family:var(--f-display);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.clock-time{font-family:var(--f-data);font-weight:700;font-size:clamp(24px,4vw,34px);line-height:1.15;font-variant-numeric:tabular-nums;text-shadow:0 0 18px color-mix(in srgb,var(--ion) 45%,transparent)}
+.clock-time small{font-size:.48em;color:var(--dim);margin-left:.35em;letter-spacing:.1em}
+.clock-date{color:var(--dim);font-size:12px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--left);box-shadow:0 0 10px var(--left);display:inline-block}
+.pulse{animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{50%{opacity:.3}}
+@media (max-width:600px){.clock{text-align:left}.clock-label{justify-content:flex-start}}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:baseline;gap:8px;padding:6px 12px;border:1px solid var(--line);background:color-mix(in srgb,var(--hull) 85%,transparent);font-size:12px}
+.chip em{font-style:normal;font-family:var(--f-display);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+.chip b{font-family:var(--f-data);font-weight:500;font-variant-numeric:tabular-nums}
+.chip.state{align-items:center;color:var(--left);border-color:color-mix(in srgb,var(--left) 45%,var(--line));font-family:var(--f-display);letter-spacing:.16em;text-transform:uppercase;font-size:11px}
+.chip.state[data-phase="pending"]{color:var(--ion);border-color:color-mix(in srgb,var(--ion) 45%,var(--line))}
+.chip.state[data-phase="pending"] .dot{background:var(--ion);box-shadow:0 0 10px var(--ion)}
+.chip.state[data-phase="done"]{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 45%,var(--line))}
+.chip.state[data-phase="done"] .dot{background:var(--gold);box-shadow:0 0 10px var(--gold)}
+
+/* panels */
+.panel{position:relative;min-width:0;padding:18px;border:1px solid var(--line);background:linear-gradient(180deg,var(--hull-hi),var(--hull))}
+.panel::before,.panel::after{content:"";position:absolute;width:14px;height:14px;pointer-events:none;border:0 solid var(--ion)}
+.panel::before{top:-1px;left:-1px;border-top-width:2px;border-left-width:2px}
+.panel::after{right:-1px;bottom:-1px;border-bottom-width:2px;border-right-width:2px}
+.panel.goal::before,.panel.goal::after{border-color:var(--gold)}
+.ph{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;margin-bottom:14px}
+h2{margin:0;font-family:var(--f-display);font-weight:700;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 8px var(--ion)}
+.goal h2::before{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--dim)}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px}
+.sw-done{background:var(--done)}.sw-left{background:var(--left)}.sw-gold{background:var(--gold)}
+
+.hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:start}
+.stack{display:grid;gap:16px;min-width:0}
+.lower{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:920px){.hero,.lower{grid-template-columns:minmax(0,1fr)}}
+
+/* dial */
+.dial{position:relative;width:100%;max-width:470px;aspect-ratio:1;margin:0 auto;container-type:inline-size}
+.dial svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.core{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;pointer-events:none}
+.core .k{font-family:var(--f-display);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+.big{font-family:var(--f-data);font-weight:700;font-size:28px;font-size:clamp(17px,6.8cqw,38px);font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap;text-shadow:0 0 22px color-mix(in srgb,var(--ion) 50%,transparent)}
+.big .c{color:var(--dim)}
+.big .m{font-size:.46em;color:var(--ion);margin-left:.12em;vertical-align:.7em}
+.earned{font-family:var(--f-data);font-size:13px;font-size:clamp(11px,3.2cqw,15px);color:var(--left)}
+.next{font-family:var(--f-data);font-size:11px;font-size:clamp(10px,2.7cqw,13px);color:var(--dim)}
+.track{fill:none;stroke:var(--line);stroke-width:1}
+.orbit{fill:none;stroke:var(--ion);stroke-width:1.2;opacity:.45;transform-origin:200px 200px;animation:spin 90s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tick{stroke:var(--faint);stroke-width:1}
+.tick.major{stroke:var(--dim);stroke-width:1.6}
+.hlabel{fill:var(--dim);font-family:var(--f-data);font-size:11px;text-anchor:middle;dominant-baseline:middle}
+.seg{cursor:pointer;transition:fill .4s}
+.seg.done{fill:var(--done)}
+.seg.left{fill:color-mix(in srgb,var(--left) 60%,var(--void))}
+.seg.cur{fill:var(--left);filter:drop-shadow(0 0 8px var(--left))}
+.seg.sel{stroke:var(--ink);stroke-width:2}
+.seg:focus{outline:none}
+.seg:focus-visible{stroke:var(--ion);stroke-width:3}
+.seg-in{animation:segIn .5s ease-out both;animation-delay:calc(var(--i) * 35ms)}
+@keyframes segIn{from{opacity:.12}to{opacity:1}}
+#segFill{fill:var(--done);pointer-events:none}
+#pip{fill:var(--ion);filter:drop-shadow(0 0 6px var(--ion))}
+
+.readout{margin-top:14px;border-top:1px dashed var(--line);padding-top:14px;display:grid;gap:10px}
+.ro-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.ro-hr{font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:.06em}
+.ro-time{font-family:var(--f-data);color:var(--dim);font-size:13px}
+.pill{font-family:var(--f-display);font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:3px 8px;border:1px solid currentColor}
+.pill.done{color:var(--done)}.pill.cur{color:var(--left)}.pill.left{color:var(--left)}.pill.gold{color:var(--gold)}
+.linkish{margin-left:auto;background:none;border:1px solid var(--line);color:var(--ion);font:inherit;font-size:12px;padding:4px 10px;cursor:pointer}
+.kvs{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px}
+.kv{display:grid;gap:2px;padding:8px 10px;background:color-mix(in srgb,var(--void) 55%,transparent);border:1px solid var(--line);min-width:0}
+.kv span{font-family:var(--f-display);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--f-data);font-weight:500;font-size:14px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+
+/* ledger */
+.ledger dl{margin:0;display:grid;grid-template-columns:minmax(0,1fr) auto}
+.ledger dt,.ledger dd{margin:0;padding:9px 0;border-bottom:1px dashed var(--line)}
+.ledger dt{color:var(--dim);font-size:13px;min-width:0}
+.ledger dt small{color:var(--faint);font-size:11px;margin-left:6px}
+.ledger dd{font-family:var(--f-data);font-variant-numeric:tabular-nums;text-align:right;font-size:14px;padding-left:12px}
+.ledger dt.em{color:var(--ink)}
+.ledger dd.em{color:var(--ion);font-weight:700;font-size:16px}
+.ledger dd.wd{color:var(--gold)}
+
+/* goal */
+.gauge{position:relative;height:18px;border:1px solid var(--line);background:var(--void);overflow:hidden}
+.gauge-fill{position:absolute;inset:0 auto 0 0;width:0;min-width:3px;background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 30%,transparent),var(--gold));box-shadow:0 0 14px var(--gold);transition:width .6s}
+.gauge::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(4% - 2px),var(--void) calc(4% - 2px) 4%)}
+.gauge-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px;margin-top:8px}
+.pct{font-family:var(--f-data);font-weight:700;font-size:22px;color:var(--gold);font-variant-numeric:tabular-nums}
+.togo{font-family:var(--f-data);color:var(--dim);font-size:13px}
+.eta{margin-top:14px;display:grid;gap:2px}
+.lbl{font-family:var(--f-display);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+.eta-v{font-family:var(--f-display);font-weight:700;font-size:clamp(18px,2.4vw,24px);letter-spacing:.02em;text-wrap:balance}
+.dimtext{color:var(--dim);font-size:13px}
+.countdown{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.countdown div{border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line));background:color-mix(in srgb,var(--gold) 6%,var(--void));padding:8px 4px;text-align:center;min-width:0}
+.countdown b{display:block;font-family:var(--f-data);font-size:clamp(18px,3vw,26px);font-weight:700;font-variant-numeric:tabular-nums}
+.countdown span{font-family:var(--f-display);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+
+/* chart */
+.seg-toggle{display:inline-flex;border:1px solid var(--line)}
+.seg-toggle button{background:none;border:0;color:var(--dim);font-family:var(--f-display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 12px;cursor:pointer}
+.seg-toggle button[aria-pressed="true"]{background:color-mix(in srgb,var(--ion) 16%,transparent);color:var(--ion)}
+.chart{width:100%;min-height:230px}
+.chart svg{display:block;width:100%;height:auto}
+.ax{fill:var(--faint);font-family:var(--f-data);font-size:10px}
+.gridl{stroke:var(--line);stroke-width:1}
+.area{stroke:none}
+.ln-solid{fill:none;stroke:var(--ion);stroke-width:2.2;stroke-linejoin:round}
+.ln-dash{fill:none;stroke:var(--ion);stroke-width:1.6;stroke-dasharray:5 5;opacity:.7}
+.goal-ln{stroke:var(--gold);stroke-width:1.2;stroke-dasharray:6 6}
+.goal-tx{fill:var(--gold);font-family:var(--f-display);font-size:10px;letter-spacing:.14em}
+.gdot{fill:var(--gold)}
+.ghalo{fill:none;stroke:var(--gold);stroke-width:1.2;opacity:.55}
+.now-ln{stroke:var(--ion);stroke-width:1;stroke-dasharray:2 4;opacity:.6}
+.now-dot{fill:var(--ion)}
+.now-tx{fill:var(--ion);font-family:var(--f-display);font-size:10px;letter-spacing:.16em}
+.note{margin:10px 0 0;color:var(--faint);font-size:12px}
+
+/* day map */
+.daygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:6px}
+.day{position:relative;aspect-ratio:1;max-width:100%;border:0;padding:0;font-family:var(--f-data);font-size:12px;font-weight:700;color:var(--void);cursor:pointer;display:grid;place-items:center}
+.day.done{background:var(--done)}
+.day.left{background:color-mix(in srgb,var(--left) 60%,var(--void))}
+.day.today{background:linear-gradient(90deg,var(--done) var(--p,0%),var(--left) var(--p,0%));box-shadow:0 0 0 1px var(--ink),0 0 14px color-mix(in srgb,var(--left) 55%,transparent)}
+.day.goal{outline:2px solid var(--gold);outline-offset:2px}
+.day.goal::after{content:"★";position:absolute;top:-9px;right:-6px;color:var(--gold);font-size:12px;line-height:1}
+.day.sel{box-shadow:0 0 0 2px var(--ion)}
+.day .mo{position:absolute;top:1px;left:3px;font-size:7px;letter-spacing:.06em;font-weight:500}
+.dd{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;display:grid;gap:10px}
+.dd-head{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.dd-head b{font-family:var(--f-display);font-size:16px;letter-spacing:.04em}
+.dd-head span{color:var(--dim);font-size:13px}
+
+/* parameters */
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:420px){.fields{grid-template-columns:minmax(0,1fr)}}
+.fields label{display:grid;gap:6px;font-family:var(--f-display);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);min-width:0}
+.fields input{width:100%;min-width:0;background:var(--void);border:1px solid var(--line);color:var(--ink);font-family:var(--f-data);font-size:14px;padding:9px 10px;letter-spacing:0;text-transform:none;border-radius:0}
+.fields input[aria-invalid="true"]{border-color:var(--done)}
+.ghost{background:none;border:1px solid var(--line);color:var(--dim);font-family:var(--f-display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 12px;cursor:pointer}
+.ghost:hover{color:var(--ink);border-color:var(--dim)}
+.err{color:var(--done);font-size:12px;margin:10px 0 0;min-height:1.2em}
+.fine{color:var(--faint);font-size:12px;margin:4px 0 0}
+button:focus-visible,input:focus-visible{outline:2px solid var(--ion);outline-offset:2px}
+/* ---------- spreadsheet ---------- */
+.wrap{grid-template-columns:minmax(0,1fr)}
+#sheet{scroll-margin-top:16px}
+.chip.link{color:var(--ink);text-decoration:none;border-color:color-mix(in srgb,var(--ion) 45%,var(--line))}
+.chip.link:hover{background:color-mix(in srgb,var(--ion) 12%,var(--hull))}
+.sheet-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tabs{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line)}
+.tabs button{background:none;border:0;color:var(--dim);font-family:var(--f-display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:8px 14px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:color-mix(in srgb,var(--ion) 16%,transparent);color:var(--ion);box-shadow:inset 0 -2px 0 var(--ion)}
+.note.top{margin:0 0 12px}
+.hbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.daynav{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-width:0}
+.daynav select{background:var(--void);color:var(--ink);border:1px solid var(--line);font-family:var(--f-data);font-size:13px;padding:7px 10px;border-radius:0;min-width:0;max-width:100%}
+.daynav .ghost{font-size:16px;padding:3px 12px;line-height:1.3}
+.ghost:disabled{opacity:.35;cursor:default}
+.hsum{display:grid;gap:10px;margin-bottom:12px}
+.kv small{color:var(--faint);font-size:11px;font-family:var(--f-data)}
+.kv b.gold-t{color:var(--gold)}
+.tbl-wrap{position:relative;overflow:auto;max-height:min(72vh,760px);border:1px solid var(--line);background:var(--void);overscroll-behavior:contain}
+table.grid{border-collapse:separate;border-spacing:0;font-family:var(--f-data);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:100%}
+.grid th,.grid td{padding:7px 10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);text-align:right}
+.grid thead th{position:sticky;top:0;z-index:3;background:var(--hull-hi);color:var(--dim);font-family:var(--f-display);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;text-align:center;vertical-align:bottom;box-shadow:inset 0 -1px 0 var(--ion)}
+.grid thead th small{display:block;font-family:var(--f-data);font-size:9px;letter-spacing:0;text-transform:none;color:var(--faint);font-weight:400;margin-top:2px}
+.grid td{background:var(--hull);color:var(--ink)}
+.grid .sc1{position:sticky;left:0;z-index:2;width:46px;min-width:46px;max-width:46px;text-align:center}
+.grid .sc2{position:sticky;left:46px;z-index:2;width:112px;min-width:112px;max-width:112px;text-align:left;box-shadow:inset -1px 0 0 var(--ion)}
+.grid thead .sc1,.grid thead .sc2{z-index:4}
+.grid td.sc1,.grid td.sc2{background:var(--hull-hi);color:var(--dim)}
+.grid .tl{text-align:left}
+.grid td.em{color:var(--ion);font-weight:700}
+.grid td.wd{color:var(--gold)}
+.grid td.nil{color:var(--faint)}
+.grid td.c-done{background:color-mix(in srgb,var(--done) 22%,var(--void));color:color-mix(in srgb,var(--done) 45%,var(--ink))}
+.grid td.c-left{background:color-mix(in srgb,var(--left) 11%,var(--void));color:color-mix(in srgb,var(--left) 55%,var(--ink))}
+.grid td.c-cur{background:color-mix(in srgb,var(--left) 32%,var(--void));color:var(--ink);box-shadow:inset 0 0 0 1px var(--left)}
+.grid td.c-gold{background:color-mix(in srgb,var(--gold) 34%,var(--void));color:var(--ink);font-weight:700;box-shadow:inset 0 0 0 2px var(--gold)}
+.grid tr.r-done td{background:color-mix(in srgb,var(--done) 16%,var(--void))}
+.grid tr.r-left td{background:color-mix(in srgb,var(--left) 8%,var(--void))}
+.grid tr.r-cur td{background:color-mix(in srgb,var(--left) 24%,var(--void))}
+.grid tr.r-gold td{background:color-mix(in srgb,var(--gold) 24%,var(--void))}
+.grid tr.today td.sc1,.grid tr.today td.sc2{background:color-mix(in srgb,var(--ion) 24%,var(--hull));color:var(--ink);font-weight:700}
+.grid tr.today td.x{background:color-mix(in srgb,var(--ion) 13%,var(--hull))}
+.grid tr.click{cursor:pointer}
+.grid tr.click:hover td{filter:brightness(1.3)}
+.grid tr.click:focus-visible{outline:2px solid var(--ion);outline-offset:-2px}
+.grid tfoot td{background:var(--hull-hi);font-weight:700;border-top:1px solid var(--ion)}
+.grid tr.dayhead td{background:var(--hull-hi);text-align:left;color:var(--ion);font-family:var(--f-display);font-size:11px;letter-spacing:.08em;border-top:1px solid var(--ion)}
+.grid tr.dayhead span{position:sticky;left:10px}
+.grid .pill{font-size:9px;padding:2px 6px}
+.star{color:var(--gold)}
+footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin:0 auto}
+@media (prefers-reduced-motion:reduce){.orbit,.pulse,.seg-in{animation:none}.seg,.gauge-fill{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 46 46" aria-hidden="true">
+        <polygon class="m-faint" points="23,2 41,12.5 41,33.5 23,44 5,33.5 5,12.5"/>
+        <path class="m-line" d="M23 9 A14 14 0 1 1 9.2 25.5"/>
+        <circle class="m-line" cx="23" cy="23" r="7"/>
+        <circle class="m-core" cx="23" cy="23" r="3"/>
+      </svg>
+      <div>
+        <h1>Growth<span>//</span>Reactor</h1>
+        <p class="sub" id="sub">Projection · $2,000 → $100,000 · 0.3543% per hour · reinvest 90% / withdraw 10%</p>
+      </div>
+    </div>
+    <div class="clock" aria-live="off">
+      <div class="clock-label"><span class="dot pulse" aria-hidden="true"></span>New York · <span id="tz">EST</span></div>
+      <div class="clock-time" id="clock">3:00:00<small>PM</small></div>
+      <div class="clock-date" id="clockDate">Wednesday, November 11, 2026</div>
+    </div>
+  </header>
+
+  <div class="chips">
+    <span class="chip state" id="chState" data-phase="live"><span class="dot pulse" aria-hidden="true"></span><span id="chStateTx">Compounding</span></span>
+    <span class="chip"><em>Day</em><b id="chDay">01 / 51</b></span>
+    <span class="chip"><em>Hour</em><b id="chHr">16 / 24</b></span>
+    <span class="chip"><em>Rate</em><b id="chRate">0.3543%/hr · 8.86%/day</b></span>
+    <a class="chip link" href="#sheet"><em>Jump to</em><b>Spreadsheet ↓</b></a>
+  </div>
+
+  <section class="hero">
+    <div class="panel">
+      <div class="ph">
+        <h2>Today's 24-hour cycle</h2>
+        <span class="legend"><span><i class="sw-done"></i>Completed</span><span><i class="sw-left"></i>Remaining</span></span>
+      </div>
+      <div class="dial">
+        <svg id="dial" viewBox="0 0 400 400" role="group" aria-label="24 hours of today, midnight at the top"></svg>
+        <div class="core">
+          <div class="k">Projected balance</div>
+          <div class="big"><span id="liveMain">$2,175</span><span class="c" id="liveCents">.40</span><span class="m" id="liveMicro">00</span></div>
+          <div class="earned" id="earned">+$175.40 today</div>
+          <div class="next" id="nextLine">Hr 16 of 24 · next step in 60:00</div>
+        </div>
+      </div>
+      <div class="readout" id="readout" aria-live="polite"></div>
+    </div>
+
+    <div class="stack">
+      <div class="panel ledger">
+        <div class="ph"><h2>Today's ledger</h2><span class="legend" id="ledgerDate">Wed, Nov 11</span></div>
+        <dl>
+          <dt>Opening <small>12:00 AM</small></dt><dd id="lgOpen">$2,000.00</dd>
+          <dt id="lgStepLabel">At 3:00 PM <small>last full hour</small></dt><dd id="lgStep">$2,175.40</dd>
+          <dt>Profit today <small>full day</small></dt><dd id="lgProfit">$287.93</dd>
+          <dt id="lgReLabel">Reinvest 90%</dt><dd id="lgRe">$259.14</dd>
+          <dt id="lgWdLabel">Withdraw 10% <small>paid at midnight</small></dt><dd class="wd" id="lgWd">$28.79</dd>
+          <dt class="em">Close at midnight</dt><dd class="em" id="lgClose">$2,259.14</dd>
+          <dt>Next payout in</dt><dd id="lgNext">9h 00m</dd>
+          <dt>Withdrawn so far <small>finished days</small></dt><dd id="lgTotal">$0.00</dd>
+        </dl>
+      </div>
+
+      <div class="panel goal">
+        <div class="ph"><h2>Goal</h2><span class="pill gold" id="goalTarget">$100,000</span></div>
+        <div class="gauge" role="progressbar" aria-label="Progress to goal" aria-valuemin="0" aria-valuemax="100" id="gauge"><div class="gauge-fill" id="gaugeFill"></div></div>
+        <div class="gauge-row"><span class="pct" id="goalPct">2.00%</span><span class="togo" id="goalTo">$98,000.00 to go</span></div>
+        <div class="eta">
+          <span class="lbl" id="goalEtaK">Reached at · New York time</span>
+          <span class="eta-v" id="goalEta">Thu, Dec 31 · 10:00 PM</span>
+          <span class="dimtext" id="goalWhich">Day 51 · Hr 22</span>
+        </div>
+        <div class="countdown" id="countdown">
+          <div><b id="cdD">50</b><span>days</span></div>
+          <div><b id="cdH">07</b><span>hrs</span></div>
+          <div><b id="cdM">00</b><span>min</span></div>
+          <div><b id="cdS">00</b><span>sec</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="ph">
+      <h2>Trajectory</h2>
+      <div class="seg-toggle" role="group" aria-label="Chart scale">
+        <button type="button" id="scLin" aria-pressed="true">Linear</button>
+        <button type="button" id="scLog" aria-pressed="false">Log</button>
+      </div>
+    </div>
+    <div class="chart" id="chart"></div>
+    <p class="note">Balance at each midnight close, after the withdrawal. Solid line: days done. Dashed line: days ahead.</p>
+  </section>
+
+  <section class="lower">
+    <div class="panel">
+      <div class="ph">
+        <h2>Day map</h2>
+        <span class="legend"><span><i class="sw-done"></i>Completed</span><span><i class="sw-left"></i>Remaining</span><span><i class="sw-gold"></i>Goal day</span></span>
+      </div>
+      <div class="daygrid" id="daygrid"></div>
+      <div class="dd" id="dayDetail"></div>
+    </div>
+
+    <form class="panel" id="params" novalidate>
+      <div class="ph"><h2>Parameters</h2><button type="button" class="ghost" id="reset">Reset</button></div>
+      <div class="fields">
+        <label for="pBal">Starting balance ($)<input id="pBal" type="number" min="1" step="any" inputmode="decimal"></label>
+        <label for="pGoal">Goal ($)<input id="pGoal" type="number" min="1" step="any" inputmode="decimal"></label>
+        <label for="pRate">Growth per hour (%)<input id="pRate" type="number" min="0" step="any" inputmode="decimal"></label>
+        <label for="pWd">Withdraw share (%)<input id="pWd" type="number" min="0" max="100" step="any" inputmode="decimal"></label>
+        <label for="pStart">Starts 12:00 AM on<input id="pStart" type="date"></label>
+        <label for="pEnd">Ends 12:00 AM on<input id="pEnd" type="date"></label>
+      </div>
+      <p class="err" id="perr" role="alert"></p>
+      <p class="fine">Changes apply instantly and are saved in this browser only. Days run midnight to midnight, New York time.</p>
+    </form>
+  </section>
+
+  <section class="panel" id="sheet">
+    <div class="ph">
+      <h2>Spreadsheet</h2>
+      <div class="sheet-ctl">
+        <div class="tabs" role="tablist" aria-label="Spreadsheet views" id="tabs">
+          <button type="button" role="tab" id="tabDays" aria-controls="pnDays" aria-selected="true">Day by Day</button>
+          <button type="button" role="tab" id="tabHours" aria-controls="pnHours" aria-selected="false" tabindex="-1">Hour by Hour</button>
+          <button type="button" role="tab" id="tabPlan" aria-controls="pnPlan" aria-selected="false" tabindex="-1">Withdrawal plan</button>
+        </div>
+        <button type="button" class="ghost" id="jumpNow">Jump to now</button>
+      </div>
+    </div>
+
+    <div role="tabpanel" id="pnDays" aria-labelledby="tabDays">
+      <p class="note top">Balance at the end of each hour, New York time. Red = completed · Green = remaining · Gold ★ = goal hour. Tap a day to open its 24 hours.</p>
+      <div class="tbl-wrap" id="wrapDays"><table class="grid" id="tblDays"></table></div>
+    </div>
+
+    <div role="tabpanel" id="pnHours" aria-labelledby="tabHours" hidden>
+      <div class="hbar">
+        <div class="daynav">
+          <button type="button" class="ghost" id="hPrev" aria-label="Previous day">‹</button>
+          <select id="hDay" aria-label="Day"></select>
+          <button type="button" class="ghost" id="hNext" aria-label="Next day">›</button>
+        </div>
+        <div class="seg-toggle" role="group" aria-label="Rows to show">
+          <button type="button" id="hOne" aria-pressed="true">One day</button>
+          <button type="button" id="hAll" aria-pressed="false">All days</button>
+        </div>
+      </div>
+      <div class="hsum" id="hSum"></div>
+      <div class="tbl-wrap" id="wrapHours"><table class="grid" id="tblHours"></table></div>
+    </div>
+
+    <div role="tabpanel" id="pnPlan" aria-labelledby="tabPlan" hidden>
+      <div class="hsum"><div class="kvs" id="planSum"></div></div>
+      <p class="note top">Each night at 12:00 AM New York time the withdraw share of that day's profit is paid out. The rest stays in and keeps compounding. Tap a day to see its hours.</p>
+      <div class="tbl-wrap" id="wrapPlan"><table class="grid" id="tblPlan"></table></div>
+    </div>
+  </section>
+
+  <footer>Projection only: every figure is calculated from the parameters on this page, not read from any account. Times are New York (America/New_York), worked out automatically from your device's clock wherever you are.</footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = (id) => document.getElementById(id);
+const SVGNS = "http://www.w3.org/2000/svg";
+const HOUR = 36e5, DAY = 864e5;
+const DEF = { bal: 2000, rate: 0.35428071, wd: 10, start: "2026-11-11", end: "2027-01-01", goal: 100000 };
+const KEY = "growth-reactor-ledger:params:v3";
+
+let P = { ...DEF };
+try {
+  const raw = localStorage.getItem(KEY);
+  if (raw) { const s = JSON.parse(raw); if (s && typeof s === "object") P = { ...DEF, ...s }; }
+} catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
+
+/* ---------- formatting ---------- */
+const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const usd0 = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+let usdC;
+try { usdC = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 2 }); }
+catch (e) { usdC = usd0; }
+const U = (o) => new Intl.DateTimeFormat("en-US", Object.assign({ timeZone: "UTC" }, o));
+const fDay = U({ weekday: "short", month: "short", day: "numeric" });
+const fLong = U({ weekday: "long", month: "long", day: "numeric", year: "numeric" });
+const fMD = U({ month: "short", day: "numeric" });
+const fMon = U({ month: "short" });
+const fT = U({ hour: "numeric", minute: "2-digit" });
+const fClk = U({ hour: "numeric", minute: "2-digit", second: "2-digit" });
+const pad = (n) => String(n).padStart(2, "0");
+const pctTx = (v) => String(Math.round(v * 10000) / 10000) + "%";
+
+/* ---------- New York clock (works on any device time zone) ---------- */
+let nyFmt = null, tzFmt = null;
+try {
+  nyFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23" });
+  tzFmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", timeZoneName: "short" });
+} catch (e) {}
+// Returns New York wall-clock time as a UTC-based millisecond count, so date math stays simple.
+function nyNow() {
+  const d = new Date();
+  if (!nyFmt) return { ms: d.getTime() - 5 * HOUR, tz: "ET" };
+  const p = {};
+  for (const x of nyFmt.formatToParts(d)) p[x.type] = x.value;
+  let h = +p.hour; if (h === 24) h = 0;
+  const ms = Date.UTC(+p.year, +p.month - 1, +p.day, h, +p.minute, +p.second, d.getMilliseconds());
+  const t = tzFmt.formatToParts(d).find((x) => x.type === "timeZoneName");
+  return { ms, tz: t ? t.value : "ET" };
+}
+function parseDate(s) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ""); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : NaN; }
+
+/* ---------- model: same math as the spreadsheet ---------- */
+let M;
+function build() {
+  const h = P.rate / 100, q = P.wd / 100;
+  const g = Math.pow(1 + h, 24) - 1;
+  const s = parseDate(P.start), e = parseDate(P.end);
+  let D = Math.round((e - s) / DAY);
+  if (!(D >= 1)) D = 1;
+  if (D > 3660) D = 3660;
+  const days = [];
+  let open = P.bal;
+  for (let i = 0; i < D; i++) {
+    const profit = open * g, w = profit * q, r = profit - w, close = open + r;
+    days.push({ i, date: s + i * DAY, open, profit, w, r, close });
+    open = close;
+  }
+  let goal = null;
+  for (const d of days) {
+    if (d.open * Math.pow(1 + h, 24) >= P.goal) {
+      let k = d.open >= P.goal ? 1 : Math.ceil(Math.log(P.goal / d.open) / Math.log(1 + h) - 1e-9);
+      k = Math.min(24, Math.max(1, k));
+      goal = { day: d.i, hr: k, at: d.date + k * HOUR };
+      break;
+    }
+  }
+  M = { h, q, g, s, D, days, goal };
+}
+
+function state(now) {
+  const rel = (now - M.s) / HOUR;
+  let di, hf, phase;
+  if (rel < 0) { di = 0; hf = 0; phase = "pending"; }
+  else if (rel >= M.D * 24) { di = M.D - 1; hf = 24; phase = "done"; }
+  else { di = Math.floor(rel / 24); hf = rel - di * 24; phase = "live"; }
+  const d = M.days[di];
+  const live = d.open * Math.pow(1 + M.h, hf);
+  const j = Math.min(24, Math.floor(hf));
+  const stepped = d.open * Math.pow(1 + M.h, j);
+  let withdrawn = 0;
+  for (let i = 0; i < di; i++) withdrawn += M.days[i].w;
+  if (phase === "done") withdrawn += d.w;
+  return { now, rel, di, hf, j, phase, d, live, stepped, withdrawn };
+}
+
+/* ---------- dial ---------- */
+const CX = 200, CY = 200, RO = 160, RI = 124, GAP = 1.1;
+function polar(r, deg) { const t = (deg - 90) * Math.PI / 180; return [CX + r * Math.cos(t), CY + r * Math.sin(t)]; }
+function ring(r0, r1, a0, a1) {
+  const lg = a1 - a0 > 180 ? 1 : 0, f = (n) => n.toFixed(2);
+  const [x0, y0] = polar(r1, a0), [x1, y1] = polar(r1, a1), [x2, y2] = polar(r0, a1), [x3, y3] = polar(r0, a0);
+  return `M${f(x0)} ${f(y0)}A${r1} ${r1} 0 ${lg} 1 ${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}A${r0} ${r0} 0 ${lg} 0 ${f(x3)} ${f(y3)}Z`;
+}
+function el(tag, attrs, parent) {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+const dial = $("dial");
+const segs = [];
+let segFill, pip;
+let selHr = null, hoverHr = null, selDay = null, lastSt = null, scale = "lin";
+
+function buildDial() {
+  el("circle", { cx: CX, cy: CY, r: 178, class: "track" }, dial);
+  el("circle", { cx: CX, cy: CY, r: 112, class: "orbit", "stroke-dasharray": "2 7" }, dial);
+  el("circle", { cx: CX, cy: CY, r: 104, class: "track" }, dial);
+  for (let i = 0; i < 24; i++) {
+    const a = i * 15, major = i % 3 === 0;
+    const [x0, y0] = polar(major ? 165 : 168, a), [x1, y1] = polar(173, a);
+    el("line", { x1: x0.toFixed(2), y1: y0.toFixed(2), x2: x1.toFixed(2), y2: y1.toFixed(2), class: major ? "tick major" : "tick" }, dial);
+    if (major) {
+      const [lx, ly] = polar(189, a);
+      const t = el("text", { x: lx.toFixed(1), y: ly.toFixed(1), class: "hlabel" }, dial);
+      t.textContent = (i % 12 === 0 ? 12 : i % 12) + (i < 12 ? "a" : "p");
+    }
+  }
+  for (let i = 0; i < 24; i++) {
+    const k = i + 1;
+    const p = el("path", { d: ring(RI, RO, i * 15 + GAP / 2, k * 15 - GAP / 2), class: "seg left seg-in", tabindex: "0", role: "button", style: `--i:${i}` }, dial);
+    p.addEventListener("click", () => { selHr = k; refresh(); });
+    p.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selHr = k; refresh(); } });
+    p.addEventListener("mouseenter", () => { hoverHr = k; renderReadout(lastSt); });
+    p.addEventListener("mouseleave", () => { hoverHr = null; renderReadout(lastSt); });
+    segs.push(p);
+  }
+  segFill = el("path", { id: "segFill", d: "" }, dial);
+  pip = el("circle", { id: "pip", r: 4.5, cx: CX, cy: CY - 178 }, dial);
+}
+
+function hourStatus(st, k) {
+  if (st.phase === "done" || k <= st.j) return "done";
+  if (st.phase === "live" && k === st.j + 1) return "cur";
+  return "left";
+}
+const ST_LABEL = { done: "Completed", cur: "In progress", left: "Remaining" };
+function hourInfo(d, k) {
+  const start = d.open * Math.pow(1 + M.h, k - 1), end = d.open * Math.pow(1 + M.h, k), earned = end - start;
+  return { k, start, end, earned, re: earned * (1 - M.q), wd: earned * M.q, from: d.date + (k - 1) * HOUR, to: d.date + k * HOUR };
+}
+
+function renderDial(st) {
+  for (let i = 0; i < 24; i++) {
+    const k = i + 1, s = hourStatus(st, k);
+    const cls = `seg ${s} seg-in${selHr === k ? " sel" : ""}`;
+    if (segs[i].getAttribute("class") !== cls) segs[i].setAttribute("class", cls);
+    const h = hourInfo(st.d, k);
+    segs[i].setAttribute("aria-label", `Hour ${k}, ${fT.format(h.from)} to ${fT.format(h.to)}, ${ST_LABEL[s]}`);
+  }
+  if (st.phase === "live") {
+    const frac = st.hf - st.j, a0 = st.j * 15 + GAP / 2;
+    segFill.setAttribute("d", frac > 0.003 ? ring(RI, RO, a0, a0 + (15 - GAP) * frac) : "");
+  } else segFill.setAttribute("d", "");
+  const [px, py] = polar(178, Math.min(24, st.hf) * 15);
+  pip.setAttribute("cx", px.toFixed(2)); pip.setAttribute("cy", py.toFixed(2));
+}
+
+function renderReadout(st) {
+  if (!st) return;
+  const k = hoverHr || selHr || (st.phase === "done" ? 24 : st.phase === "live" ? st.j + 1 : 1);
+  const h = hourInfo(st.d, k), s = hourStatus(st, k);
+  const isGoal = M.goal && M.goal.day === st.di && M.goal.hr === k;
+  const reTx = pctTx(100 - P.wd), wdTx = pctTx(P.wd);
+  $("readout").innerHTML =
+    `<div class="ro-head"><span class="ro-hr">HR ${pad(k)}</span><span class="ro-time">${fT.format(h.from)} – ${fT.format(h.to)}</span>` +
+    `<span class="pill ${s}">${ST_LABEL[s]}</span>${isGoal ? '<span class="pill gold">★ Goal hour</span>' : ""}` +
+    (selHr ? '<button type="button" class="linkish" id="roNow">Back to now</button>' : "") + `</div>` +
+    `<div class="kvs">` +
+    `<div class="kv"><span>Start</span><b>${usd.format(h.start)}</b></div>` +
+    `<div class="kv"><span>End</span><b>${usd.format(h.end)}</b></div>` +
+    `<div class="kv"><span>Earned</span><b>${usd.format(h.earned)}</b></div>` +
+    `<div class="kv"><span>Reinvest ${reTx}</span><b>${usd.format(h.re)}</b></div>` +
+    `<div class="kv"><span>Withdraw ${wdTx}</span><b>${usd.format(h.wd)}</b></div>` +
+    `</div>`;
+  const b = $("roNow");
+  if (b) b.addEventListener("click", () => { selHr = null; refresh(); });
+}
+
+/* ---------- live number (smooth) ---------- */
+let offset = 0;
+function renderLive() {
+  if (!lastSt) return;
+  const now = Date.now() + offset;
+  const st = lastSt, rel = (now - M.s) / HOUR;
+  let hf = st.phase === "live" ? Math.min(24, Math.max(0, rel - st.di * 24)) : st.hf;
+  const v = st.d.open * Math.pow(1 + M.h, hf);
+  const s = usd.format(v);
+  $("liveMain").textContent = s.slice(0, -3);
+  $("liveCents").textContent = s.slice(-3);
+  $("liveMicro").textContent = pad(Math.floor((v * 10000) % 100));
+  $("earned").textContent = `+${usd.format(v - st.d.open)} today`;
+}
+let lastFrame = 0;
+function frame(t) {
+  if (t - lastFrame > 90) { lastFrame = t; renderLive(); }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- header, ledger, goal ---------- */
+function dur(ms) {
+  ms = Math.max(0, ms);
+  const tot = Math.floor(ms / 1000), d = Math.floor(tot / 86400), h = Math.floor(tot % 86400 / 3600), m = Math.floor(tot % 3600 / 60);
+  return d ? `${d}d ${pad(h)}h ${pad(m)}m` : `${h}h ${pad(m)}m`;
+}
+function renderTop(st, tz) {
+  const parts = fClk.formatToParts(st.now);
+  const ap = (parts.find((p) => p.type === "dayPeriod") || { value: "" }).value;
+  const hms = parts.filter((p) => p.type !== "dayPeriod").map((p) => p.value).join("").trim();
+  $("clock").innerHTML = `${hms}<small>${ap}</small>`;
+  $("clockDate").textContent = fLong.format(st.now);
+  $("tz").textContent = tz;
+  $("chDay").textContent = `${pad(st.di + 1)} / ${pad(M.D)}`;
+  $("chHr").textContent = st.phase === "live" ? `${pad(st.j + 1)} / 24` : st.phase === "done" ? "24 / 24" : "— / 24";
+  $("chRate").textContent = `${pctTx(P.rate)}/hr · ${(M.g * 100).toFixed(2)}%/day`;
+  const chs = $("chState"); chs.dataset.phase = st.phase;
+  $("chStateTx").textContent = st.phase === "live" ? "Compounding" : st.phase === "pending" ? `Starts ${fDay.format(M.s)}` : "Run complete";
+  let next;
+  if (st.phase === "live") {
+    const left = Math.max(0, Math.round((st.j + 1 - st.hf) * 3600));
+    next = `Next step in ${pad(Math.floor(left / 60))}:${pad(left % 60)}`;
+  } else if (st.phase === "pending") next = `Starts in ${dur(M.s - st.now)}`;
+  else next = "All days complete";
+  $("nextLine").textContent = next;
+}
+function renderLedger(st) {
+  const d = st.d;
+  $("ledgerDate").textContent = fDay.format(d.date);
+  $("lgOpen").textContent = usd.format(d.open);
+  $("lgStepLabel").innerHTML = st.phase === "pending" ? "At start <small>no hours yet</small>" : `At ${fT.format(d.date + st.j * HOUR)} <small>last full hour</small>`;
+  $("lgStep").textContent = usd.format(st.stepped);
+  $("lgProfit").textContent = usd.format(d.profit);
+  $("lgReLabel").textContent = `Reinvest ${pctTx(100 - P.wd)}`;
+  $("lgRe").textContent = usd.format(d.r);
+  $("lgWdLabel").innerHTML = `Withdraw ${pctTx(P.wd)} <small>paid at midnight</small>`;
+  $("lgWd").textContent = usd.format(d.w);
+  $("lgClose").textContent = usd.format(d.close);
+  $("lgNext").textContent = st.phase === "live" ? dur((24 - st.hf) * HOUR) : st.phase === "pending" ? "After day 1" : "Done";
+  $("lgTotal").textContent = usd.format(st.withdrawn);
+}
+function renderGoal(st) {
+  const prog = Math.min(1, st.live / P.goal);
+  $("goalTarget").textContent = usd0.format(P.goal);
+  $("gaugeFill").style.width = (prog * 100).toFixed(3) + "%";
+  $("gauge").setAttribute("aria-valuenow", (prog * 100).toFixed(2));
+  $("goalPct").textContent = (prog * 100 >= 10 ? (prog * 100).toFixed(1) : (prog * 100).toFixed(2)) + "%";
+  const g = M.goal, cd = $("countdown");
+  if (!g) {
+    const last = M.days[M.D - 1];
+    $("goalTo").textContent = `${usd.format(Math.max(0, P.goal - st.live))} to go`;
+    $("goalEtaK").textContent = "Not reached within these dates";
+    $("goalEta").textContent = `Short by ${usd0.format(P.goal - last.close)}`;
+    $("goalWhich").textContent = `Projected close on ${fMD.format(last.date)}: ${usd.format(last.close)}`;
+    cd.hidden = true;
+    return;
+  }
+  cd.hidden = false;
+  const reached = st.now >= g.at;
+  $("goalTo").textContent = reached ? "Goal reached" : `${usd.format(Math.max(0, P.goal - st.live))} to go`;
+  $("goalEtaK").textContent = reached ? "Reached at · New York time" : "Reaches the goal at · New York time";
+  $("goalEta").textContent = `${fDay.format(g.at - HOUR)} · ${fT.format(g.at)}`;
+  $("goalWhich").textContent = `Day ${g.day + 1} · Hr ${g.hr} (${fT.format(g.at - HOUR)} – ${fT.format(g.at)})`;
+  const ms = Math.max(0, g.at - st.now), t = Math.floor(ms / 1000);
+  $("cdD").textContent = Math.floor(t / 86400);
+  $("cdH").textContent = pad(Math.floor(t % 86400 / 3600));
+  $("cdM").textContent = pad(Math.floor(t % 3600 / 60));
+  $("cdS").textContent = pad(t % 60);
+}
+
+/* ---------- day map ---------- */
+function buildDays() {
+  const grid = $("daygrid");
+  grid.textContent = "";
+  M.days.forEach((d, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "day left";
+    const dom = new Date(d.date).getUTCDate();
+    b.innerHTML = (i === 0 || dom === 1 ? `<span class="mo">${fMon.format(d.date).toUpperCase()}</span>` : "") + `<span>${dom}</span>`;
+    b.title = `Day ${i + 1} · ${fDay.format(d.date)} · close ${usd.format(d.close)}`;
+    b.setAttribute("aria-label", b.title);
+    b.addEventListener("click", () => { selDay = selDay === i ? null : i; if (selDay !== null) { hDaySel = selDay; if (sheetTab === "hours") renderSheet(); } refresh(); });
+    grid.appendChild(b);
+  });
+}
+function renderDays(st) {
+  const cells = $("daygrid").children;
+  for (let i = 0; i < cells.length; i++) {
+    const c = cells[i];
+    let cls = "day " + (st.phase === "done" || i < st.di ? "done" : i === st.di && st.phase === "live" ? "today" : "left");
+    if (M.goal && M.goal.day === i) cls += " goal";
+    if (selDay === i) cls += " sel";
+    if (c.className !== cls) c.className = cls;
+    if (i === st.di && st.phase === "live") c.style.setProperty("--p", (st.hf / 24 * 100).toFixed(2) + "%");
+  }
+  const i = selDay === null ? st.di : selDay, d = M.days[i];
+  const status = st.phase === "done" || i < st.di ? "done" : i === st.di && st.phase === "live" ? "cur" : "left";
+  const stTx = status === "done" ? "Completed" : status === "cur" ? "Today" : "Remaining";
+  const isGoal = M.goal && M.goal.day === i;
+  $("dayDetail").innerHTML =
+    `<div class="dd-head"><b>Day ${i + 1}</b><span>${fDay.format(d.date)}</span><span class="pill ${status}">${stTx}</span>` +
+    (isGoal ? `<span class="pill gold">★ Goal at ${fT.format(M.goal.at)}</span>` : "") + `</div>` +
+    `<div class="kvs">` +
+    `<div class="kv"><span>Opening</span><b>${usd.format(d.open)}</b></div>` +
+    `<div class="kv"><span>Profit</span><b>${usd.format(d.profit)}</b></div>` +
+    `<div class="kv"><span>Reinvest ${pctTx(100 - P.wd)}</span><b>${usd.format(d.r)}</b></div>` +
+    `<div class="kv"><span>Withdraw ${pctTx(P.wd)}</span><b>${usd.format(d.w)}</b></div>` +
+    `<div class="kv"><span>Close</span><b>${usd.format(d.close)}</b></div>` +
+    `</div>`;
+}
+
+/* ---------- trajectory chart ---------- */
+function niceStep(v) { const e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e; }
+function drawChart(st) {
+  const box = $("chart");
+  const W = Math.max(300, Math.round(box.clientWidth || 800)), H = W < 560 ? 230 : 300;
+  const m = { l: 56, r: 14, t: 22, b: 28 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const pts = [[0, P.bal]].concat(M.days.map((d) => [d.i + 1, d.close]));
+  const ys = pts.map((p) => p[1]);
+  const maxY = Math.max(Math.max.apply(null, ys), P.goal), minY = Math.min.apply(null, ys);
+  let y, ticks = [];
+  if (scale === "log") {
+    const lo = Math.log10(Math.max(1, minY * 0.7)), hi = Math.log10(maxY * 1.5);
+    y = (v) => m.t + ih - (Math.log10(Math.max(v, 1e-9)) - lo) / (hi - lo) * ih;
+    for (let e = Math.ceil(lo); e <= Math.floor(hi); e++) ticks.push(Math.pow(10, e));
+  } else {
+    const step = niceStep(maxY * 1.06 / 4), top = Math.ceil(maxY * 1.06 / step) * step;
+    y = (v) => m.t + ih - v / top * ih;
+    for (let v = 0; v <= top + step / 2; v += step) ticks.push(v);
+  }
+  const x = (t) => m.l + t / M.D * iw;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
+    "aria-label": `Projected balance from ${usd0.format(P.bal)} to ${usd0.format(M.days[M.D - 1].close)} over ${M.D} days` });
+  const defs = el("defs", {}, svg);
+  const lg = el("linearGradient", { id: "gArea", x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+  el("stop", { offset: 0, style: "stop-color:var(--ion);stop-opacity:.30" }, lg);
+  el("stop", { offset: 1, style: "stop-color:var(--ion);stop-opacity:0" }, lg);
+
+  for (const v of ticks) {
+    const yy = y(v).toFixed(1);
+    el("line", { x1: m.l, x2: W - m.r, y1: yy, y2: yy, class: "gridl" }, svg);
+    const t = el("text", { x: m.l - 8, y: yy, class: "ax", "text-anchor": "end", "dominant-baseline": "middle" }, svg);
+    t.textContent = v === 0 ? "$0" : usdC.format(v);
+  }
+  const xStep = W < 560 ? 14 : 7;
+  for (let t = 0; t <= M.D; t += xStep) {
+    const xx = x(t);
+    if (xx > W - m.r - 16 && t !== 0) continue;
+    el("line", { x1: xx.toFixed(1), x2: xx.toFixed(1), y1: m.t + ih, y2: m.t + ih + 4, class: "gridl" }, svg);
+    const tx = el("text", { x: xx.toFixed(1), y: H - 8, class: "ax", "text-anchor": t === 0 ? "start" : "middle" }, svg);
+    tx.textContent = fMD.format(M.s + t * DAY);
+  }
+
+  const nowT = Math.max(0, Math.min(M.D, st.rel / 24));
+  const i0 = Math.min(M.D - 1, Math.floor(nowT));
+  const y0v = pts[i0][1], y1v = pts[Math.min(pts.length - 1, i0 + 1)][1];
+  const nowV = y0v * Math.pow(y1v / y0v, nowT - i0);
+  const P2 = (t, v) => `${x(t).toFixed(1)},${y(v).toFixed(1)}`;
+  const past = pts.filter((p) => p[0] <= nowT).map((p) => P2(p[0], p[1]));
+  past.push(P2(nowT, nowV));
+  const future = [P2(nowT, nowV)].concat(pts.filter((p) => p[0] > nowT).map((p) => P2(p[0], p[1])));
+  const base = (m.t + ih).toFixed(1);
+  const all = pts.map((p) => P2(p[0], p[1]));
+  el("path", { d: `M${x(0).toFixed(1)},${base}L${all.join("L")}L${x(M.D).toFixed(1)},${base}Z`, class: "area", fill: "url(#gArea)" }, svg);
+
+  const gy = y(P.goal).toFixed(1);
+  el("line", { x1: m.l, x2: W - m.r, y1: gy, y2: gy, class: "goal-ln" }, svg);
+  const gt = el("text", { x: m.l + 8, y: (+gy - 7).toFixed(1), class: "goal-tx", "text-anchor": "start" }, svg);
+  gt.textContent = `GOAL ${usdC.format(P.goal)}`;
+
+  if (future.length > 1) el("path", { d: "M" + future.join("L"), class: "ln-dash" }, svg);
+  if (past.length > 1) el("path", { d: "M" + past.join("L"), class: "ln-solid" }, svg);
+
+  if (M.goal) {
+    const gx = x(M.goal.day + M.goal.hr / 24);
+    el("circle", { cx: gx.toFixed(1), cy: gy, r: 9, class: "ghalo" }, svg);
+    el("circle", { cx: gx.toFixed(1), cy: gy, r: 4.5, class: "gdot" }, svg);
+    const lt = el("text", { x: (gx - 12).toFixed(1), y: (+gy - 14).toFixed(1), class: "goal-tx", "text-anchor": "end" }, svg);
+    lt.textContent = `★ ${fMD.format(M.goal.at - HOUR).toUpperCase()}`;
+  }
+  const nx = x(nowT), ny = y(nowV);
+  el("line", { x1: nx.toFixed(1), x2: nx.toFixed(1), y1: m.t, y2: m.t + ih, class: "now-ln" }, svg);
+  el("circle", { cx: nx.toFixed(1), cy: ny.toFixed(1), r: 4.5, class: "now-dot" }, svg);
+  const nt = el("text", { x: (nx + 6).toFixed(1), y: m.t + 2, class: "now-tx", "dominant-baseline": "hanging" }, svg);
+  nt.textContent = "NOW";
+
+  box.textContent = "";
+  box.appendChild(svg);
+}
+
+/* ---------- parameters ---------- */
+const F = { bal: $("pBal"), goal: $("pGoal"), rate: $("pRate"), wd: $("pWd"), start: $("pStart"), end: $("pEnd") };
+function fillForm() { for (const k in F) F[k].value = P[k]; }
+function readForm() {
+  const v = { bal: parseFloat(F.bal.value), goal: parseFloat(F.goal.value), rate: parseFloat(F.rate.value), wd: parseFloat(F.wd.value), start: F.start.value, end: F.end.value };
+  const bad = {}; let msg = "";
+  const flag = (k, t) => { bad[k] = true; if (!msg) msg = t; };
+  if (!(v.bal > 0)) flag("bal", "Starting balance must be more than $0.");
+  if (!(v.goal > 0)) flag("goal", "Goal must be more than $0.");
+  if (!(v.rate > 0 && v.rate < 100)) flag("rate", "Growth per hour must be between 0% and 100%.");
+  if (!(v.wd >= 0 && v.wd <= 100)) flag("wd", "Withdraw share must be between 0% and 100%.");
+  const s = parseDate(v.start), e = parseDate(v.end);
+  if (isNaN(s)) flag("start", "Pick a start date.");
+  if (isNaN(e) || (!isNaN(s) && e <= s)) flag("end", "The end must be at least one day after the start.");
+  else if (!isNaN(s) && (e - s) / DAY > 3650) flag("end", "Keep the range under 10 years.");
+  for (const k in F) F[k].setAttribute("aria-invalid", bad[k] ? "true" : "false");
+  $("perr").textContent = msg;
+  return msg ? null : v;
+}
+function rebuild() {
+  build(); buildDays(); buildDaySelect();
+  selDay = null; selHr = null; hDaySel = null; sheetKey = "";
+  $("sub").textContent = `Projection · ${usd0.format(P.bal)} → ${usd0.format(P.goal)} · ${pctTx(P.rate)} per hour · reinvest ${pctTx(100 - P.wd)} / withdraw ${pctTx(P.wd)}`;
+  tick(); drawChart(lastSt);
+}
+$("params").addEventListener("input", () => { const v = readForm(); if (v) { P = v; save(); rebuild(); } });
+$("params").addEventListener("submit", (e) => e.preventDefault());
+$("reset").addEventListener("click", () => { P = { ...DEF }; fillForm(); readForm(); save(); rebuild(); });
+function setScale(s) {
+  scale = s;
+  $("scLin").setAttribute("aria-pressed", String(s === "lin"));
+  $("scLog").setAttribute("aria-pressed", String(s === "log"));
+  if (lastSt) drawChart(lastSt);
+}
+$("scLin").addEventListener("click", () => setScale("lin"));
+$("scLog").addEventListener("click", () => setScale("log"));
+
+/* ---------- spreadsheet views ---------- */
+let sheetTab = "days", hView = "one", hDaySel = null, sheetKey = "";
+try { const t = localStorage.getItem(KEY + ":tab"); if (t === "days" || t === "hours" || t === "plan") sheetTab = t; } catch (e) {}
+const TABS = { days: [$("tabDays"), $("pnDays"), $("wrapDays")], hours: [$("tabHours"), $("pnHours"), $("wrapHours")], plan: [$("tabPlan"), $("pnPlan"), $("wrapPlan")] };
+const pctFmt = (v) => (v * 100 >= 10 ? (v * 100).toFixed(1) : (v * 100).toFixed(2)) + "%";
+function slot(k) {
+  const f = (h) => { h %= 24; return { n: h % 12 === 0 ? 12 : h % 12, ap: h < 12 ? "AM" : "PM" }; };
+  const a = f(k - 1), b = f(k);
+  return a.ap === b.ap ? `${a.n}–${b.n} ${b.ap}` : `${a.n} ${a.ap}–${b.n} ${b.ap}`;
+}
+function cellStatus(st, i, k) {
+  if (st.phase === "done" || (st.phase === "live" && i < st.di)) return "done";
+  if (st.phase === "pending" || i > st.di) return "left";
+  return hourStatus(st, k);
+}
+function dayStatus(st, i) {
+  if (st.phase === "done" || (st.phase === "live" && i < st.di)) return "done";
+  if (st.phase === "live" && i === st.di) return "cur";
+  return "left";
+}
+const isGoalHr = (i, k) => !!(M.goal && M.goal.day === i && M.goal.hr === k);
+const DS_LABEL = { done: "Completed", cur: "Today", left: "Remaining" };
+const selectedDay = (st) => Math.max(0, Math.min(M.D - 1, hDaySel === null ? st.di : hDaySel));
+
+function renderDaysTable(st) {
+  let tp = 0, tw = 0, tr = 0;
+  let h = `<thead><tr><th class="sc1">Day</th><th class="sc2">Date</th><th>Opening<small>12:00 AM</small></th>`;
+  for (let k = 1; k <= 24; k++) h += `<th>Hr ${k}<small>${slot(k)}</small></th>`;
+  h += `<th>Profit</th><th>Withdraw ${pctTx(P.wd)}</th><th>Reinvest ${pctTx(100 - P.wd)}</th><th>Close</th><th>Hrs done</th><th>Progress</th></tr></thead><tbody>`;
+  for (const d of M.days) {
+    const i = d.i, ds = dayStatus(st, i);
+    tp += d.profit; tw += d.w; tr += d.r;
+    let row = `<tr class="click${ds === "cur" ? " today" : ""}" data-day="${i}" tabindex="0"><td class="sc1">${i + 1}</td><td class="sc2">${fDay.format(d.date)}</td><td class="x">${usd.format(d.open)}</td>`;
+    for (let k = 1; k <= 24; k++) {
+      const g = isGoalHr(i, k);
+      row += `<td class="c-${g ? "gold" : cellStatus(st, i, k)}">${g ? "★ " : ""}${usd.format(d.open * Math.pow(1 + M.h, k))}</td>`;
+    }
+    const hrs = ds === "done" ? 24 : ds === "cur" ? st.j : 0;
+    row += `<td class="x">${usd.format(d.profit)}</td><td class="x wd">${usd.format(d.w)}</td><td class="x">${usd.format(d.r)}</td><td class="x em">${usd.format(d.close)}</td><td class="x">${hrs} / 24</td><td class="x">${pctFmt(d.close / P.goal)}</td></tr>`;
+    h += row;
+  }
+  const last = M.days[M.D - 1];
+  h += `</tbody><tfoot><tr><td class="sc1">Σ</td><td class="sc2">Total</td><td colspan="25" class="nil tl">${M.D} days · ${M.D * 24} hours</td><td>${usd.format(tp)}</td><td class="wd">${usd.format(tw)}</td><td>${usd.format(tr)}</td><td class="em">${usd.format(last.close)}</td><td colspan="2"></td></tr></tfoot>`;
+  return h;
+}
+
+function hoursHead() {
+  return `<thead><tr><th class="sc1">Hr</th><th>Time</th><th>Start balance</th><th>Earned</th><th>Reinvest ${pctTx(100 - P.wd)}</th><th>Withdraw ${pctTx(P.wd)}</th><th>End balance</th><th>Paid out</th><th>Progress</th><th>Status</th></tr></thead>`;
+}
+function hourRow(st, d, k) {
+  const h = hourInfo(d, k), s = cellStatus(st, d.i, k), g = isGoalHr(d.i, k), paid = k === 24;
+  return `<tr class="r-${g ? "gold" : s}" data-h="${d.i}-${k}"><td class="sc1">${k}</td><td class="tl">${fT.format(h.from)} – ${fT.format(h.to)}</td>` +
+    `<td>${usd.format(h.start)}</td><td>${usd.format(h.earned)}</td><td>${usd.format(h.re)}</td><td>${usd.format(h.wd)}</td>` +
+    `<td class="em">${usd.format(h.end)}</td><td class="${paid ? "wd" : "nil"}">${paid ? usd.format(d.w) : "–"}</td>` +
+    `<td>${pctFmt(h.end / P.goal)}</td><td class="tl"><span class="pill ${s}">${ST_LABEL[s]}</span>${g ? ' <span class="pill gold">★ Goal</span>' : ""}</td></tr>`;
+}
+function renderHours(st) {
+  const i = selectedDay(st);
+  $("hDay").value = String(i);
+  $("hPrev").disabled = i <= 0;
+  $("hNext").disabled = i >= M.D - 1;
+  $("hOne").setAttribute("aria-pressed", String(hView === "one"));
+  $("hAll").setAttribute("aria-pressed", String(hView === "all"));
+  let h = hoursHead() + "<tbody>";
+  if (hView === "one") {
+    const d = M.days[i], ds = dayStatus(st, i);
+    $("hSum").innerHTML =
+      `<div class="dd-head"><b>Day ${i + 1}</b><span>${fLong.format(d.date)}</span><span class="pill ${ds}">${DS_LABEL[ds]}</span>` +
+      (M.goal && M.goal.day === i ? `<span class="pill gold">★ Goal at ${fT.format(M.goal.at)}</span>` : "") + `</div>` +
+      `<div class="kvs">` +
+      `<div class="kv"><span>Opening</span><b>${usd.format(d.open)}</b></div>` +
+      `<div class="kv"><span>Profit</span><b>${usd.format(d.profit)}</b></div>` +
+      `<div class="kv"><span>Reinvest ${pctTx(100 - P.wd)}</span><b>${usd.format(d.r)}</b></div>` +
+      `<div class="kv"><span>Withdraw ${pctTx(P.wd)}</span><b class="gold-t">${usd.format(d.w)}</b><small>paid ${fDay.format(d.date + DAY)} · 12:00 AM</small></div>` +
+      `<div class="kv"><span>Close</span><b>${usd.format(d.close)}</b></div>` +
+      `</div>`;
+    for (let k = 1; k <= 24; k++) h += hourRow(st, d, k);
+    h += `</tbody><tfoot><tr><td class="sc1">Σ</td><td class="tl">Day total</td><td>${usd.format(d.open)}</td><td>${usd.format(d.profit)}</td><td>${usd.format(d.r)}</td><td class="wd">${usd.format(d.w)}</td><td class="em">${usd.format(d.open + d.profit)}</td><td class="wd">${usd.format(d.w)}</td><td>${pctFmt(d.close / P.goal)}</td><td class="tl">Close ${usd.format(d.close)}</td></tr></tfoot>`;
+  } else {
+    let tp = 0, tw = 0;
+    for (const d of M.days) { tp += d.profit; tw += d.w; }
+    const doneHrs = st.phase === "done" ? M.D * 24 : st.phase === "pending" ? 0 : st.di * 24 + st.j;
+    $("hSum").innerHTML = `<div class="kvs">` +
+      `<div class="kv"><span>Hours completed</span><b>${doneHrs} / ${M.D * 24}</b></div>` +
+      `<div class="kv"><span>Total earned</span><b>${usd.format(tp)}</b></div>` +
+      `<div class="kv"><span>Total withdrawn</span><b class="gold-t">${usd.format(tw)}</b></div>` +
+      `<div class="kv"><span>Final close</span><b>${usd.format(M.days[M.D - 1].close)}</b></div></div>`;
+    for (const d of M.days) {
+      h += `<tr class="dayhead" id="hd-${d.i}"><td colspan="10"><span>DAY ${d.i + 1} · ${fDay.format(d.date)} · Opening ${usd.format(d.open)} · Withdraw ${usd.format(d.w)} at midnight · Close ${usd.format(d.close)}</span></td></tr>`;
+      for (let k = 1; k <= 24; k++) h += hourRow(st, d, k);
+    }
+    h += "</tbody>";
+  }
+  $("tblHours").innerHTML = h;
+}
+
+function renderPlan(st) {
+  let cum = 0, paid = 0, left = 0, next = null, tp = 0, tw = 0, tr = 0, rows = "";
+  for (const d of M.days) {
+    const s = dayStatus(st, d.i);
+    cum += d.w; tp += d.profit; tw += d.w; tr += d.r;
+    if (s === "done") paid += d.w; else { left++; if (!next) next = d; }
+    const lab = s === "done" ? "Paid" : s === "cur" ? "Tonight" : "Scheduled";
+    const g = M.goal && M.goal.day === d.i;
+    rows += `<tr class="r-${s} click" data-day="${d.i}" tabindex="0"><td class="sc1">${d.i + 1}</td><td class="tl">${fDay.format(d.date)}${g ? ' <span class="star">★</span>' : ""}</td>` +
+      `<td class="tl">${fDay.format(d.date + DAY)} · 12:00 AM</td><td>${usd.format(d.profit)}</td><td class="wd">${usd.format(d.w)}</td><td>${usd.format(d.r)}</td>` +
+      `<td>${usd.format(cum)}</td><td class="em">${usd.format(d.close)}</td><td class="tl"><span class="pill ${s}">${lab}</span></td></tr>`;
+  }
+  const last = M.days[M.D - 1];
+  $("planSum").innerHTML =
+    `<div class="kv"><span>Total withdrawals · ${M.D} days</span><b class="gold-t">${usd.format(tw)}</b></div>` +
+    `<div class="kv"><span>Paid so far</span><b>${usd.format(paid)}</b></div>` +
+    `<div class="kv"><span>Next payout</span><b>${next ? usd.format(next.w) : "—"}</b><small>${next ? fDay.format(next.date + DAY) + " · 12:00 AM" : "All paid"}</small></div>` +
+    `<div class="kv"><span>Payouts left</span><b>${left} of ${M.D}</b></div>` +
+    `<div class="kv"><span>Total reinvested</span><b>${usd.format(tr)}</b></div>`;
+  $("tblPlan").innerHTML =
+    `<thead><tr><th class="sc1">Day</th><th>Date</th><th>Payout at</th><th>Profit</th><th>Withdraw ${pctTx(P.wd)}</th><th>Reinvest ${pctTx(100 - P.wd)}</th><th>Withdrawn to date</th><th>Balance after payout</th><th>Status</th></tr></thead>` +
+    `<tbody>${rows}</tbody>` +
+    `<tfoot><tr><td class="sc1">Σ</td><td class="tl" colspan="2">Total · ${M.D} payouts</td><td>${usd.format(tp)}</td><td class="wd">${usd.format(tw)}</td><td>${usd.format(tr)}</td><td>${usd.format(tw)}</td><td class="em">${usd.format(last.close)}</td><td></td></tr></tfoot>`;
+}
+
+function renderSheet() {
+  const st = lastSt; if (!st) return;
+  if (sheetTab === "days") $("tblDays").innerHTML = renderDaysTable(st);
+  else if (sheetTab === "hours") renderHours(st);
+  else renderPlan(st);
+}
+function scrollWrapTo(wrap, row, cell, leftPad) {
+  const head = wrap.querySelector("thead"), hh = head ? head.offsetHeight : 0;
+  const wr = wrap.getBoundingClientRect();
+  if (row) wrap.scrollTop += row.getBoundingClientRect().top - wr.top - hh - 6; else wrap.scrollTop = 0;
+  if (cell) wrap.scrollLeft += cell.getBoundingClientRect().left - wr.left - leftPad; else wrap.scrollLeft = 0;
+}
+function jumpToNow() {
+  const st = lastSt; if (!st) return;
+  const wrap = TABS[sheetTab][2];
+  const k = st.phase === "done" ? 24 : st.phase === "live" ? st.j + 1 : 1;
+  if (sheetTab === "days") {
+    const row = wrap.querySelector(`tr[data-day="${st.di}"]`);
+    const cell = row && st.phase === "live" ? row.children[2 + k] : null;
+    const prev = cell && cell.previousElementSibling;
+    scrollWrapTo(wrap, st.phase === "pending" ? null : row, cell, 46 + 112 + (prev ? prev.offsetWidth : 0) + 4);
+  } else if (sheetTab === "hours") {
+    const i = selectedDay(st);
+    const row = i === st.di && st.phase !== "pending" ? wrap.querySelector(`tr[data-h="${i}-${k}"]`)
+      : hView === "all" ? wrap.querySelector(`#hd-${i}`) : null;
+    scrollWrapTo(wrap, row, null, 0);
+  } else {
+    scrollWrapTo(wrap, st.phase === "pending" ? null : wrap.querySelector(`tr[data-day="${st.di}"]`), null, 0);
+  }
+}
+function showTab(t) {
+  sheetTab = t;
+  try { localStorage.setItem(KEY + ":tab", t); } catch (e) {}
+  for (const k in TABS) {
+    const [b, p] = TABS[k], on = k === t;
+    b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1; p.hidden = !on;
+  }
+  renderSheet(); jumpToNow();
+}
+function buildDaySelect() {
+  $("hDay").innerHTML = M.days.map((d) => `<option value="${d.i}">Day ${d.i + 1} · ${fDay.format(d.date)}</option>`).join("");
+}
+function goDay(i) {
+  hDaySel = Math.max(0, Math.min(M.D - 1, i));
+  renderSheet();
+  const wrap = $("wrapHours");
+  if (hView === "all") scrollWrapTo(wrap, wrap.querySelector(`#hd-${hDaySel}`), null, 0);
+  else if (lastSt && hDaySel === lastSt.di && lastSt.phase === "live") jumpToNow();
+  else scrollWrapTo(wrap, null, null, 0);
+}
+function openDay(i) { hDaySel = i; hView = "one"; showTab("hours"); }
+for (const k in TABS) TABS[k][0].addEventListener("click", () => showTab(k));
+$("tabs").addEventListener("keydown", (e) => {
+  const order = ["days", "hours", "plan"]; let n = order.indexOf(sheetTab);
+  if (e.key === "ArrowRight") n = (n + 1) % 3; else if (e.key === "ArrowLeft") n = (n + 2) % 3; else return;
+  e.preventDefault(); showTab(order[n]); TABS[order[n]][0].focus();
+});
+$("jumpNow").addEventListener("click", () => { hDaySel = null; renderSheet(); jumpToNow(); });
+$("hDay").addEventListener("change", (e) => goDay(+e.target.value));
+$("hPrev").addEventListener("click", () => goDay(selectedDay(lastSt) - 1));
+$("hNext").addEventListener("click", () => goDay(selectedDay(lastSt) + 1));
+$("hOne").addEventListener("click", () => { hView = "one"; goDay(selectedDay(lastSt)); });
+$("hAll").addEventListener("click", () => { hView = "all"; goDay(selectedDay(lastSt)); });
+for (const id of ["tblDays", "tblPlan"]) {
+  $(id).addEventListener("click", (e) => { const tr = e.target.closest("tr[data-day]"); if (tr) openDay(+tr.dataset.day); });
+  $(id).addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const tr = e.target.closest("tr[data-day]"); if (!tr) return;
+    e.preventDefault(); openDay(+tr.dataset.day);
+  });
+}
+
+/* ---------- loop ---------- */
+let tzName = "ET", lastDay = -1, lastChart = 0;
+function refresh() {
+  const st = lastSt; if (!st) return;
+  renderDial(st); renderReadout(st); renderDays(st);
+}
+function tick() {
+  const n = nyNow();
+  offset = n.ms - Date.now(); tzName = n.tz;
+  const st = state(n.ms); lastSt = st;
+  renderTop(st, tzName); renderDial(st); renderReadout(st); renderLedger(st); renderGoal(st); renderDays(st); renderLive();
+  if (st.di !== lastDay || n.ms - lastChart > 30000) { lastDay = st.di; lastChart = n.ms; drawChart(st); }
+  const key = st.phase + "|" + st.di + "|" + st.j;
+  if (key !== sheetKey) { sheetKey = key; renderSheet(); }
+}
+
+fillForm();
+build(); buildDial(); buildDays(); buildDaySelect();
+$("sub").textContent = `Projection · ${usd0.format(P.bal)} → ${usd0.format(P.goal)} · ${pctTx(P.rate)} per hour · reinvest ${pctTx(100 - P.wd)} / withdraw ${pctTx(P.wd)}`;
+tick();
+showTab(sheetTab);
+setInterval(tick, 1000);
+requestAnimationFrame(frame);
+let rz = 0;
+const onResize = () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => lastSt && drawChart(lastSt)); };
+if ("ResizeObserver" in window) new ResizeObserver(onResize).observe($("chart"));
+else window.addEventListener("resize", onResize);
+})();
+</script>
+</body>
+</html>
