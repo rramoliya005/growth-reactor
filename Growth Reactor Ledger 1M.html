@@ -92,7 +92,6 @@ h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 
 .core{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;pointer-events:none}
 .core .k{font-family:var(--f-display);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
 .big{font-family:var(--f-data);font-weight:700;font-size:28px;font-size:clamp(17px,6.8cqw,38px);font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap;text-shadow:0 0 22px color-mix(in srgb,var(--ion) 50%,transparent)}
-.big.long{font-size:24px;font-size:clamp(15px,5.6cqw,32px)}
 .big .c{color:var(--dim)}
 .big .m{font-size:.46em;color:var(--ion);margin-left:.12em;vertical-align:.7em}
 .earned{font-family:var(--f-data);font-size:13px;font-size:clamp(11px,3.2cqw,15px);color:var(--left)}
@@ -182,8 +181,6 @@ h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 
 .day.goal{outline:2px solid var(--gold);outline-offset:2px}
 .day.goal::after{content:"★";position:absolute;top:-9px;right:-6px;color:var(--gold);font-size:12px;line-height:1}
 .day.sel{box-shadow:0 0 0 2px var(--ion)}
-.day.actual::before{content:"";position:absolute;bottom:3px;left:50%;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--ion);box-shadow:0 0 0 1px var(--void)}
-.sw-act{background:var(--ion);border-radius:50%}
 .day .mo{position:absolute;top:1px;left:3px;font-size:7px;letter-spacing:.06em;font-weight:500}
 .dd{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;display:grid;gap:10px}
 .dd-head{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
@@ -266,21 +263,21 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       </svg>
       <div>
         <h1>Growth<span>//</span>Reactor</h1>
-        <p class="sub" id="sub">Projection · $2,000 → $6,063.00 actual (Nov 18 close) → $1,000,000 · 0.5477% per hour after · reinvest 90% / withdraw 10%</p>
+        <p class="sub" id="sub">Projection · $1,000 → $1,000,000 · 0.777% per hour · reinvest 90% / withdraw 10%</p>
       </div>
     </div>
     <div class="clock" aria-live="off">
       <div class="clock-label"><span class="dot pulse" aria-hidden="true"></span>New York · <span id="tz">EST</span></div>
       <div class="clock-time" id="clock">3:00:00<small>PM</small></div>
-      <div class="clock-date" id="clockDate">Wednesday, November 11, 2026</div>
+      <div class="clock-date" id="clockDate">Saturday, November 21, 2026</div>
     </div>
   </header>
 
   <div class="chips">
     <span class="chip state" id="chState" data-phase="live"><span class="dot pulse" aria-hidden="true"></span><span id="chStateTx">Compounding</span></span>
-    <span class="chip"><em>Day</em><b id="chDay">01 / 50</b></span>
+    <span class="chip"><em>Day</em><b id="chDay">01 / 41</b></span>
     <span class="chip"><em>Hour</em><b id="chHr">16 / 24</b></span>
-    <span class="chip"><em>Rate</em><b id="chRate">0.7301%/hr · 19.08%/day</b></span>
+    <span class="chip"><em>Rate</em><b id="chRate">0.777%/hr · 20.41%/day</b></span>
     <a class="chip link" href="#sheet"><em>Jump to</em><b>Spreadsheet ↓</b></a>
   </div>
 
@@ -304,14 +301,14 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
 
     <div class="stack">
       <div class="panel ledger">
-        <div class="ph"><h2>Today's ledger</h2><span class="legend" id="ledgerDate">Wed, Nov 11</span></div>
+        <div class="ph"><h2>Today's ledger</h2><span class="legend" id="ledgerDate">Sat, Nov 21</span></div>
         <dl>
-          <dt>Opening <small>12:00 AM</small></dt><dd id="lgOpen">$2,000.00</dd>
+          <dt>Opening <small>12:00 AM</small></dt><dd id="lgOpen">$1,000.00</dd>
           <dt id="lgStepLabel">At 3:00 PM <small>last full hour</small></dt><dd id="lgStep">$2,175.40</dd>
-          <dt>Profit today <small>full day</small></dt><dd id="lgProfit">$287.93</dd>
-          <dt id="lgReLabel">Reinvest 90%</dt><dd id="lgRe">$259.14</dd>
-          <dt id="lgWdLabel">Withdraw 10% <small>paid at midnight</small></dt><dd class="wd" id="lgWd">$28.79</dd>
-          <dt class="em" id="lgCloseLabel">Close at midnight</dt><dd class="em" id="lgClose">$2,259.14</dd>
+          <dt>Profit today <small>full day</small></dt><dd id="lgProfit">$204.13</dd>
+          <dt id="lgReLabel">Reinvest 90%</dt><dd id="lgRe">$183.72</dd>
+          <dt id="lgWdLabel">Withdraw 10% <small>paid at midnight</small></dt><dd class="wd" id="lgWd">$20.41</dd>
+          <dt class="em">Close at midnight</dt><dd class="em" id="lgClose">$1,183.72</dd>
           <dt>Next payout in</dt><dd id="lgNext">9h 00m</dd>
           <dt>Withdrawn so far <small>finished days</small></dt><dd id="lgTotal">$0.00</dd>
         </dl>
@@ -320,14 +317,14 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       <div class="panel goal">
         <div class="ph"><h2>Goal</h2><span class="pill gold" id="goalTarget">$1,000,000</span></div>
         <div class="gauge" role="progressbar" aria-label="Progress to goal" aria-valuemin="0" aria-valuemax="100" id="gauge"><div class="gauge-fill" id="gaugeFill"></div></div>
-        <div class="gauge-row"><span class="pct" id="goalPct">1.45%</span><span class="togo" id="goalTo">$135,740.83 to go</span></div>
+        <div class="gauge-row"><span class="pct" id="goalPct">0.10%</span><span class="togo" id="goalTo">$999,000.00 to go</span></div>
         <div class="eta">
-          <span class="lbl" id="goalEtaK">Reached at · New York time</span>
-          <span class="eta-v" id="goalEta">Thu, Dec 31 · 10:00 PM</span>
-          <span class="dimtext" id="goalWhich">Day 51 · Hr 22</span>
+          <span class="lbl" id="goalEtaK">Reaches the goal at · New York time</span>
+          <span class="eta-v" id="goalEta">Thu, Dec 31 · 9:00 PM</span>
+          <span class="dimtext" id="goalWhich">Day 41 · Hr 21</span>
         </div>
         <div class="countdown" id="countdown">
-          <div><b id="cdD">50</b><span>days</span></div>
+          <div><b id="cdD">40</b><span>days</span></div>
           <div><b id="cdH">07</b><span>hrs</span></div>
           <div><b id="cdM">00</b><span>min</span></div>
           <div><b id="cdS">00</b><span>sec</span></div>
@@ -352,7 +349,7 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
     <div class="panel">
       <div class="ph">
         <h2>Day map</h2>
-        <span class="legend"><span><i class="sw-done"></i>Completed</span><span><i class="sw-left"></i>Remaining</span><span><i class="sw-gold"></i>Goal day</span><span><i class="sw-act"></i>Actual close</span></span>
+        <span class="legend"><span><i class="sw-done"></i>Completed</span><span><i class="sw-left"></i>Remaining</span><span><i class="sw-gold"></i>Goal day</span></span>
       </div>
       <div class="daygrid" id="daygrid"></div>
       <div class="dd" id="dayDetail"></div>
@@ -367,11 +364,9 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
         <label for="pWd">Withdraw share (%)<input id="pWd" type="number" min="0" max="100" step="any" inputmode="decimal"></label>
         <label for="pStart">Starts 12:00 AM on<input id="pStart" type="date"></label>
         <label for="pEnd">Ends 12:00 AM on<input id="pEnd" type="date"></label>
-        <label for="pAct">Actual close ($) · optional<input id="pAct" type="number" min="0" step="any" inputmode="decimal" placeholder="None"></label>
-        <label for="pActD">Close on the night of<input id="pActD" type="date"></label>
       </div>
       <p class="err" id="perr" role="alert"></p>
-      <p class="fine">With an actual close set, the days up to it are fitted to land exactly on it and the growth rate applies from the next day. Changes apply instantly and are saved in this browser only. Days run midnight to midnight, New York time.</p>
+      <p class="fine">Changes apply instantly and are saved in this browser only. Days run midnight to midnight, New York time.</p>
     </form>
   </section>
 
@@ -389,7 +384,7 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
     </div>
 
     <div role="tabpanel" id="pnDays" aria-labelledby="tabDays">
-      <p class="note top">Balance at the end of each hour, New York time. Red = completed · Green = remaining · Gold ★ = goal hour · ✓ = your actual close. Tap a day to open its 24 hours.</p>
+      <p class="note top">Balance at the end of each hour, New York time. Red = completed · Green = remaining · Gold ★ = goal hour. Tap a day to open its 24 hours.</p>
       <div class="tbl-wrap" id="wrapDays"><table class="grid" id="tblDays"></table></div>
     </div>
 
@@ -425,8 +420,8 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
 const $ = (id) => document.getElementById(id);
 const SVGNS = "http://www.w3.org/2000/svg";
 const HOUR = 36e5, DAY = 864e5;
-const DEF = { bal: 2000, rate: 0.547730124, wd: 10, start: "2026-11-12", end: "2027-01-01", goal: 1000000, actual: 6063, actualDate: "2026-11-18" };
-const KEY = "growth-reactor-ledger:params:v7";
+const DEF = { bal: 1000, rate: 0.777, wd: 10, start: "2026-11-21", end: "2027-01-01", goal: 1000000 };
+const KEY = "growth-reactor-ledger:params:v9";
 
 let P = { ...DEF };
 try {
@@ -480,35 +475,23 @@ function build() {
   let D = Math.round((e - s) / DAY);
   if (!(D >= 1)) D = 1;
   if (D > 3660) D = 3660;
-  // Actual close: days up to and including it are fitted so that night's close lands on it.
-  let ci = -1, hA = h;
-  const a = parseDate(P.actualDate);
-  if (P.actual > 0 && !isNaN(a) && q < 1) {
-    const c = Math.round((a - s) / DAY);
-    if (c >= 0 && c < D) {
-      const gA = (Math.pow(P.actual / P.bal, 1 / (c + 1)) - 1) / (1 - q);
-      if (gA > -1) { ci = c; hA = Math.pow(1 + gA, 1 / 24) - 1; }
-    }
-  }
-  const gA = Math.pow(1 + hA, 24) - 1;
   const days = [];
   let open = P.bal;
   for (let i = 0; i < D; i++) {
-    const dh = i <= ci ? hA : h, dg = i <= ci ? gA : g;
-    const profit = open * dg, w = profit * q, r = profit - w, close = open + r;
-    days.push({ i, date: s + i * DAY, open, profit, w, r, close, h: dh, g: dg, actual: i === ci });
+    const profit = open * g, w = profit * q, r = profit - w, close = open + r;
+    days.push({ i, date: s + i * DAY, open, profit, w, r, close });
     open = close;
   }
   let goal = null;
   for (const d of days) {
-    if (d.open * Math.pow(1 + d.h, 24) >= P.goal) {
-      let k = d.open >= P.goal ? 1 : Math.ceil(Math.log(P.goal / d.open) / Math.log(1 + d.h) - 1e-9);
+    if (d.open * Math.pow(1 + h, 24) >= P.goal) {
+      let k = d.open >= P.goal ? 1 : Math.ceil(Math.log(P.goal / d.open) / Math.log(1 + h) - 1e-9);
       k = Math.min(24, Math.max(1, k));
       goal = { day: d.i, hr: k, at: d.date + k * HOUR };
       break;
     }
   }
-  M = { h, q, g, s, D, days, goal, ci, hA };
+  M = { h, q, g, s, D, days, goal };
 }
 
 function state(now) {
@@ -518,9 +501,9 @@ function state(now) {
   else if (rel >= M.D * 24) { di = M.D - 1; hf = 24; phase = "done"; }
   else { di = Math.floor(rel / 24); hf = rel - di * 24; phase = "live"; }
   const d = M.days[di];
-  const live = d.open * Math.pow(1 + d.h, hf);
+  const live = d.open * Math.pow(1 + M.h, hf);
   const j = Math.min(24, Math.floor(hf));
-  const stepped = d.open * Math.pow(1 + d.h, j);
+  const stepped = d.open * Math.pow(1 + M.h, j);
   let withdrawn = 0;
   for (let i = 0; i < di; i++) withdrawn += M.days[i].w;
   if (phase === "done") withdrawn += d.w;
@@ -580,7 +563,7 @@ function hourStatus(st, k) {
 }
 const ST_LABEL = { done: "Completed", cur: "In progress", left: "Remaining" };
 function hourInfo(d, k) {
-  const start = d.open * Math.pow(1 + d.h, k - 1), end = d.open * Math.pow(1 + d.h, k), earned = end - start;
+  const start = d.open * Math.pow(1 + M.h, k - 1), end = d.open * Math.pow(1 + M.h, k), earned = end - start;
   return { k, start, end, earned, re: earned * (1 - M.q), wd: earned * M.q, from: d.date + (k - 1) * HOUR, to: d.date + k * HOUR };
 }
 
@@ -628,9 +611,8 @@ function renderLive() {
   const now = Date.now() + offset;
   const st = lastSt, rel = (now - M.s) / HOUR;
   let hf = st.phase === "live" ? Math.min(24, Math.max(0, rel - st.di * 24)) : st.hf;
-  const v = st.d.open * Math.pow(1 + st.d.h, hf);
+  const v = st.d.open * Math.pow(1 + M.h, hf);
   const s = usd.format(v);
-  $("liveMain").parentNode.classList.toggle("long", s.length > 11);
   $("liveMain").textContent = s.slice(0, -3);
   $("liveCents").textContent = s.slice(-3);
   $("liveMicro").textContent = pad(Math.floor((v * 10000) % 100));
@@ -657,7 +639,7 @@ function renderTop(st, tz) {
   $("tz").textContent = tz;
   $("chDay").textContent = `${pad(st.di + 1)} / ${pad(M.D)}`;
   $("chHr").textContent = st.phase === "live" ? `${pad(st.j + 1)} / 24` : st.phase === "done" ? "24 / 24" : "— / 24";
-  $("chRate").textContent = `${pctTx(st.d.h * 100)}/hr · ${(st.d.g * 100).toFixed(2)}%/day`;
+  $("chRate").textContent = `${pctTx(P.rate)}/hr · ${(M.g * 100).toFixed(2)}%/day`;
   const chs = $("chState"); chs.dataset.phase = st.phase;
   $("chStateTx").textContent = st.phase === "live" ? "Compounding" : st.phase === "pending" ? `Starts ${fDay.format(M.s)}` : "Run complete";
   let next;
@@ -680,7 +662,6 @@ function renderLedger(st) {
   $("lgWdLabel").innerHTML = `Withdraw ${pctTx(P.wd)} <small>paid at midnight</small>`;
   $("lgWd").textContent = usd.format(d.w);
   $("lgClose").textContent = usd.format(d.close);
-  $("lgCloseLabel").innerHTML = d.actual ? "Close at midnight <small>your actual</small>" : "Close at midnight";
   $("lgNext").textContent = st.phase === "live" ? dur((24 - st.hf) * HOUR) : st.phase === "pending" ? "After day 1" : "Done";
   $("lgTotal").textContent = usd.format(st.withdrawn);
 }
@@ -722,7 +703,7 @@ function buildDays() {
     b.type = "button"; b.className = "day left";
     const dom = new Date(d.date).getUTCDate();
     b.innerHTML = (i === 0 || dom === 1 ? `<span class="mo">${fMon.format(d.date).toUpperCase()}</span>` : "") + `<span>${dom}</span>`;
-    b.title = `Day ${i + 1} · ${fDay.format(d.date)} · close ${usd.format(d.close)}${d.actual ? " (actual)" : ""}`;
+    b.title = `Day ${i + 1} · ${fDay.format(d.date)} · close ${usd.format(d.close)}`;
     b.setAttribute("aria-label", b.title);
     b.addEventListener("click", () => { selDay = selDay === i ? null : i; if (selDay !== null) { hDaySel = selDay; if (sheetTab === "hours") renderSheet(); } refresh(); });
     grid.appendChild(b);
@@ -734,7 +715,6 @@ function renderDays(st) {
     const c = cells[i];
     let cls = "day " + (st.phase === "done" || i < st.di ? "done" : i === st.di && st.phase === "live" ? "today" : "left");
     if (M.goal && M.goal.day === i) cls += " goal";
-    if (M.days[i].actual) cls += " actual";
     if (selDay === i) cls += " sel";
     if (c.className !== cls) c.className = cls;
     if (i === st.di && st.phase === "live") c.style.setProperty("--p", (st.hf / 24 * 100).toFixed(2) + "%");
@@ -751,7 +731,7 @@ function renderDays(st) {
     `<div class="kv"><span>Profit</span><b>${usd.format(d.profit)}</b></div>` +
     `<div class="kv"><span>Reinvest ${pctTx(100 - P.wd)}</span><b>${usd.format(d.r)}</b></div>` +
     `<div class="kv"><span>Withdraw ${pctTx(P.wd)}</span><b>${usd.format(d.w)}</b></div>` +
-    `<div class="kv"><span>${d.actual ? "Close · actual" : "Close"}</span><b>${usd.format(d.close)}</b></div>` +
+    `<div class="kv"><span>Close</span><b>${usd.format(d.close)}</b></div>` +
     `</div>`;
 }
 
@@ -835,10 +815,10 @@ function drawChart(st) {
 }
 
 /* ---------- parameters ---------- */
-const F = { bal: $("pBal"), goal: $("pGoal"), rate: $("pRate"), wd: $("pWd"), start: $("pStart"), end: $("pEnd"), actual: $("pAct"), actualDate: $("pActD") };
-function fillForm() { for (const k in F) F[k].value = P[k] == null ? "" : P[k]; }
+const F = { bal: $("pBal"), goal: $("pGoal"), rate: $("pRate"), wd: $("pWd"), start: $("pStart"), end: $("pEnd") };
+function fillForm() { for (const k in F) F[k].value = P[k]; }
 function readForm() {
-  const v = { bal: parseFloat(F.bal.value), goal: parseFloat(F.goal.value), rate: parseFloat(F.rate.value), wd: parseFloat(F.wd.value), start: F.start.value, end: F.end.value, actual: F.actual.value.trim() === "" ? null : parseFloat(F.actual.value), actualDate: F.actualDate.value };
+  const v = { bal: parseFloat(F.bal.value), goal: parseFloat(F.goal.value), rate: parseFloat(F.rate.value), wd: parseFloat(F.wd.value), start: F.start.value, end: F.end.value };
   const bad = {}; let msg = "";
   const flag = (k, t) => { bad[k] = true; if (!msg) msg = t; };
   if (!(v.bal > 0)) flag("bal", "Starting balance must be more than $0.");
@@ -849,26 +829,14 @@ function readForm() {
   if (isNaN(s)) flag("start", "Pick a start date.");
   if (isNaN(e) || (!isNaN(s) && e <= s)) flag("end", "The end must be at least one day after the start.");
   else if (!isNaN(s) && (e - s) / DAY > 3650) flag("end", "Keep the range under 10 years.");
-  if (v.actual !== null) {
-    const a = parseDate(v.actualDate);
-    if (!(v.actual > 0)) flag("actual", "Actual close must be more than $0.");
-    else if (isNaN(a)) flag("actualDate", "Pick the night of the actual close.");
-    else if (!isNaN(s) && !isNaN(e) && (a < s || a >= e)) flag("actualDate", "The actual close must fall between the start and end dates.");
-    else if (v.wd >= 100) flag("wd", "Withdraw share must be under 100% when an actual close is set.");
-    else if (v.bal > 0 && !isNaN(s) && 1 + (Math.pow(v.actual / v.bal, DAY / (a - s + DAY)) - 1) / (1 - v.wd / 100) <= 0) flag("actual", "That close can't be reached with this withdraw share.");
-  }
   for (const k in F) F[k].setAttribute("aria-invalid", bad[k] ? "true" : "false");
   $("perr").textContent = msg;
   return msg ? null : v;
 }
-function subTx() {
-  const a = M.ci >= 0 ? ` → ${usd.format(M.days[M.ci].close)} actual (${fMD.format(M.days[M.ci].date)} close)` : "";
-  return `Projection · ${usd0.format(P.bal)}${a} → ${gFmt(P.goal)} · ${pctTx(P.rate)} per hour${M.ci >= 0 ? " after" : ""} · reinvest ${pctTx(100 - P.wd)} / withdraw ${pctTx(P.wd)}`;
-}
 function rebuild() {
   build(); buildDays(); buildDaySelect();
   selDay = null; selHr = null; hDaySel = null; sheetKey = "";
-  $("sub").textContent = subTx();
+  $("sub").textContent = `Projection · ${usd0.format(P.bal)} → ${gFmt(P.goal)} · ${pctTx(P.rate)} per hour · reinvest ${pctTx(100 - P.wd)} / withdraw ${pctTx(P.wd)}`;
   tick(); drawChart(lastSt);
 }
 $("params").addEventListener("input", () => { const v = readForm(); if (v) { P = v; save(); rebuild(); } });
@@ -918,10 +886,10 @@ function renderDaysTable(st) {
     let row = `<tr class="click${ds === "cur" ? " today" : ""}" data-day="${i}" tabindex="0"><td class="sc1">${i + 1}</td><td class="sc2">${fDay.format(d.date)}</td><td class="x">${usd.format(d.open)}</td>`;
     for (let k = 1; k <= 24; k++) {
       const g = isGoalHr(i, k);
-      row += `<td class="c-${g ? "gold" : cellStatus(st, i, k)}">${g ? "★ " : ""}${usd.format(d.open * Math.pow(1 + d.h, k))}</td>`;
+      row += `<td class="c-${g ? "gold" : cellStatus(st, i, k)}">${g ? "★ " : ""}${usd.format(d.open * Math.pow(1 + M.h, k))}</td>`;
     }
     const hrs = ds === "done" ? 24 : ds === "cur" ? st.j : 0;
-    row += `<td class="x">${usd.format(d.profit)}</td><td class="x wd">${usd.format(d.w)}</td><td class="x">${usd.format(d.r)}</td><td class="x em">${d.actual ? "✓ " : ""}${usd.format(d.close)}</td><td class="x">${hrs} / 24</td><td class="x">${pctFmt(d.close / P.goal)}</td></tr>`;
+    row += `<td class="x">${usd.format(d.profit)}</td><td class="x wd">${usd.format(d.w)}</td><td class="x">${usd.format(d.r)}</td><td class="x em">${usd.format(d.close)}</td><td class="x">${hrs} / 24</td><td class="x">${pctFmt(d.close / P.goal)}</td></tr>`;
     h += row;
   }
   const last = M.days[M.D - 1];
@@ -957,7 +925,7 @@ function renderHours(st) {
       `<div class="kv"><span>Profit</span><b>${usd.format(d.profit)}</b></div>` +
       `<div class="kv"><span>Reinvest ${pctTx(100 - P.wd)}</span><b>${usd.format(d.r)}</b></div>` +
       `<div class="kv"><span>Withdraw ${pctTx(P.wd)}</span><b class="gold-t">${usd.format(d.w)}</b><small>paid ${fDay.format(d.date + DAY)} · 12:00 AM</small></div>` +
-      `<div class="kv"><span>${d.actual ? "Close · actual" : "Close"}</span><b>${usd.format(d.close)}</b></div>` +
+      `<div class="kv"><span>Close</span><b>${usd.format(d.close)}</b></div>` +
       `</div>`;
     for (let k = 1; k <= 24; k++) h += hourRow(st, d, k);
     h += `</tbody><tfoot><tr><td class="sc1">Σ</td><td class="tl">Day total</td><td>${usd.format(d.open)}</td><td>${usd.format(d.profit)}</td><td>${usd.format(d.r)}</td><td class="wd">${usd.format(d.w)}</td><td class="em">${usd.format(d.open + d.profit)}</td><td class="wd">${usd.format(d.w)}</td><td>${pctFmt(d.close / P.goal)}</td><td class="tl">Close ${usd.format(d.close)}</td></tr></tfoot>`;
@@ -989,7 +957,7 @@ function renderPlan(st) {
     const g = M.goal && M.goal.day === d.i;
     rows += `<tr class="r-${s} click" data-day="${d.i}" tabindex="0"><td class="sc1">${d.i + 1}</td><td class="tl">${fDay.format(d.date)}${g ? ' <span class="star">★</span>' : ""}</td>` +
       `<td class="tl">${fDay.format(d.date + DAY)} · 12:00 AM</td><td>${usd.format(d.profit)}</td><td class="wd">${usd.format(d.w)}</td><td>${usd.format(d.r)}</td>` +
-      `<td>${usd.format(cum)}</td><td class="em">${d.actual ? "✓ " : ""}${usd.format(d.close)}</td><td class="tl"><span class="pill ${s}">${lab}</span></td></tr>`;
+      `<td>${usd.format(cum)}</td><td class="em">${usd.format(d.close)}</td><td class="tl"><span class="pill ${s}">${lab}</span></td></tr>`;
   }
   const last = M.days[M.D - 1];
   $("planSum").innerHTML =
@@ -1094,7 +1062,7 @@ function tick() {
 
 fillForm();
 build(); buildDial(); buildDays(); buildDaySelect();
-$("sub").textContent = subTx();
+$("sub").textContent = `Projection · ${usd0.format(P.bal)} → ${gFmt(P.goal)} · ${pctTx(P.rate)} per hour · reinvest ${pctTx(100 - P.wd)} / withdraw ${pctTx(P.wd)}`;
 tick();
 showTab(sheetTab);
 setInterval(tick, 1000);
