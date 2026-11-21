@@ -263,21 +263,21 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       </svg>
       <div>
         <h1>Growth<span>//</span>Reactor</h1>
-        <p class="sub" id="sub">Projection · $2,000 → $137,740.83 · 0.3832% per hour · reinvest 90% / withdraw 10%</p>
+        <p class="sub" id="sub">Projection · $2,000 → $100,000 · 0.562% per hour · reinvest 90% / withdraw 10%</p>
       </div>
     </div>
     <div class="clock" aria-live="off">
       <div class="clock-label"><span class="dot pulse" aria-hidden="true"></span>New York · <span id="tz">EST</span></div>
       <div class="clock-time" id="clock">3:00:00<small>PM</small></div>
-      <div class="clock-date" id="clockDate">Wednesday, November 11, 2026</div>
+      <div class="clock-date" id="clockDate">Saturday, November 21, 2026</div>
     </div>
   </header>
 
   <div class="chips">
     <span class="chip state" id="chState" data-phase="live"><span class="dot pulse" aria-hidden="true"></span><span id="chStateTx">Compounding</span></span>
-    <span class="chip"><em>Day</em><b id="chDay">01 / 51</b></span>
+    <span class="chip"><em>Day</em><b id="chDay">01 / 33</b></span>
     <span class="chip"><em>Hour</em><b id="chHr">16 / 24</b></span>
-    <span class="chip"><em>Rate</em><b id="chRate">0.3832%/hr · 9.61%/day</b></span>
+    <span class="chip"><em>Rate</em><b id="chRate">0.562%/hr · 14.40%/day</b></span>
     <a class="chip link" href="#sheet"><em>Jump to</em><b>Spreadsheet ↓</b></a>
   </div>
 
@@ -301,7 +301,7 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
 
     <div class="stack">
       <div class="panel ledger">
-        <div class="ph"><h2>Today's ledger</h2><span class="legend" id="ledgerDate">Wed, Nov 11</span></div>
+        <div class="ph"><h2>Today's ledger</h2><span class="legend" id="ledgerDate">Sat, Nov 21</span></div>
         <dl>
           <dt>Opening <small>12:00 AM</small></dt><dd id="lgOpen">$2,000.00</dd>
           <dt id="lgStepLabel">At 3:00 PM <small>last full hour</small></dt><dd id="lgStep">$2,175.40</dd>
@@ -315,16 +315,16 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       </div>
 
       <div class="panel goal">
-        <div class="ph"><h2>Goal</h2><span class="pill gold" id="goalTarget">$137,740.83</span></div>
+        <div class="ph"><h2>Goal</h2><span class="pill gold" id="goalTarget">$100,000</span></div>
         <div class="gauge" role="progressbar" aria-label="Progress to goal" aria-valuemin="0" aria-valuemax="100" id="gauge"><div class="gauge-fill" id="gaugeFill"></div></div>
-        <div class="gauge-row"><span class="pct" id="goalPct">1.45%</span><span class="togo" id="goalTo">$135,740.83 to go</span></div>
+        <div class="gauge-row"><span class="pct" id="goalPct">2.00%</span><span class="togo" id="goalTo">$98,000.00 to go</span></div>
         <div class="eta">
           <span class="lbl" id="goalEtaK">Reached at · New York time</span>
-          <span class="eta-v" id="goalEta">Thu, Dec 31 · 10:00 PM</span>
-          <span class="dimtext" id="goalWhich">Day 51 · Hr 22</span>
+          <span class="eta-v" id="goalEta">Wed, Dec 23 · 3:00 AM</span>
+          <span class="dimtext" id="goalWhich">Day 33 · Hr 3</span>
         </div>
         <div class="countdown" id="countdown">
-          <div><b id="cdD">50</b><span>days</span></div>
+          <div><b id="cdD">32</b><span>days</span></div>
           <div><b id="cdH">07</b><span>hrs</span></div>
           <div><b id="cdM">00</b><span>min</span></div>
           <div><b id="cdS">00</b><span>sec</span></div>
@@ -420,8 +420,8 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
 const $ = (id) => document.getElementById(id);
 const SVGNS = "http://www.w3.org/2000/svg";
 const HOUR = 36e5, DAY = 864e5;
-const DEF = { bal: 2000, rate: 0.383208382, wd: 10, start: "2026-11-11", end: "2027-01-01", goal: 137740.83 };
-const KEY = "growth-reactor-ledger:params:v4";
+const DEF = { bal: 2000, rate: 0.562, wd: 10, start: "2026-11-21", end: "2026-12-24", goal: 100000 };
+const KEY = "growth-reactor-ledger:params:v5";
 
 let P = { ...DEF };
 try {
