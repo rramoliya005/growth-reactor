@@ -1,11 +1,18 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Growth Reactor Ledger</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<script>try{var gm=localStorage.getItem("growth-reactor-ledger:mode");if(gm==="day"||gm==="night")document.documentElement.setAttribute("data-mode",gm)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Oxanium:wght@500;700;800&display=swap">
 <style>
-/* Layout: HUD console. Header strip (name · live New York clock) → hero row: 24-hour reactor dial | today's ledger + goal → trajectory chart → day map | parameters. One committed dark world. */
+/* Layout: HUD console. Header strip (name · live New York clock) → status chips + Day/Night switch → spreadsheet → hero row: 24-hour reactor dial | today's ledger + goal → trajectory chart → day map | parameters.
+   Night is the original dark console; Day is a daylight instrument panel. Follows the device until a mode is picked. */
 :root{
   --void:#05070e;
   --hull:#0a1020;
@@ -18,10 +25,43 @@
   --gold:#ffc45c;
   --done:#ff4d6d;
   --left:#34f0a2;
+  --done-fill:#ff4d6d;
+  --left-fill:color-mix(in srgb,#34f0a2 60%,#05070e);
+  --mark-ink:#05070e;
+  --tglow:0 0 18px color-mix(in srgb,#7fe4ff 45%,transparent);
+  --row-hover:brightness(1.3);
   --f-display:"Oxanium","Chakra Petch",ui-sans-serif,system-ui,sans-serif;
   --f-body:"Chakra Petch",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-data:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --void:#e8edf5;--hull:#f6f8fc;--hull-hi:#ffffff;--line:#c6d0e3;--ink:#0b1430;--dim:#435178;--faint:#677495;
+    --ion:#0577a3;--gold:#9c6500;--done:#c8203c;--left:#0a8456;
+    --done-fill:#f0677e;--left-fill:#7dd7ae;--mark-ink:#0b1430;--tglow:none;--row-hover:brightness(.95);
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --void:#e8edf5;--hull:#f6f8fc;--hull-hi:#ffffff;--line:#c6d0e3;--ink:#0b1430;--dim:#435178;--faint:#677495;
+  --ion:#0577a3;--gold:#9c6500;--done:#c8203c;--left:#0a8456;
+  --done-fill:#f0677e;--left-fill:#7dd7ae;--mark-ink:#0b1430;--tglow:none;--row-hover:brightness(.95);
+  color-scheme:light;
+}
+/* the page's own Day / Night switch wins over the device and viewer theme */
+html:root[data-mode="night"]{
+  --void:#05070e;--hull:#0a1020;--hull-hi:#0f1830;--line:#1e2b4c;--ink:#e6edff;--dim:#8d9bc4;--faint:#5d6a93;
+  --ion:#7fe4ff;--gold:#ffc45c;--done:#ff4d6d;--left:#34f0a2;
+  --done-fill:#ff4d6d;--left-fill:color-mix(in srgb,#34f0a2 60%,#05070e);--mark-ink:#05070e;
+  --tglow:0 0 18px color-mix(in srgb,#7fe4ff 45%,transparent);--row-hover:brightness(1.3);
+  color-scheme:dark;
+}
+html:root[data-mode="day"]{
+  --void:#e8edf5;--hull:#f6f8fc;--hull-hi:#ffffff;--line:#c6d0e3;--ink:#0b1430;--dim:#435178;--faint:#677495;
+  --ion:#0577a3;--gold:#9c6500;--done:#c8203c;--left:#0a8456;
+  --done-fill:#f0677e;--left-fill:#7dd7ae;--mark-ink:#0b1430;--tglow:none;--row-hover:brightness(.95);
+  color-scheme:light;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{background:var(--void)}
@@ -49,7 +89,7 @@ h1 span{color:var(--ion);margin:0 .1em}
 .sub{margin:4px 0 0;color:var(--dim);font-size:13px}
 .clock{text-align:right}
 .clock-label{font-family:var(--f-display);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);display:flex;align-items:center;justify-content:flex-end;gap:8px}
-.clock-time{font-family:var(--f-data);font-weight:700;font-size:clamp(24px,4vw,34px);line-height:1.15;font-variant-numeric:tabular-nums;text-shadow:0 0 18px color-mix(in srgb,var(--ion) 45%,transparent)}
+.clock-time{font-family:var(--f-data);font-weight:700;font-size:clamp(24px,4vw,34px);line-height:1.15;font-variant-numeric:tabular-nums;text-shadow:var(--tglow)}
 .clock-time small{font-size:.48em;color:var(--dim);margin-left:.35em;letter-spacing:.1em}
 .clock-date{color:var(--dim);font-size:12px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--left);box-shadow:0 0 10px var(--left);display:inline-block}
@@ -79,7 +119,14 @@ h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 
 .goal h2::before{background:var(--gold);box-shadow:0 0 8px var(--gold)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--dim)}
 .legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px}
-.sw-done{background:var(--done)}.sw-left{background:var(--left)}.sw-gold{background:var(--gold)}
+.sw-done{background:var(--done-fill)}.sw-left{background:var(--left-fill)}.sw-gold{background:var(--gold)}
+
+/* day / night switch */
+.mode{margin-left:auto}
+.mode button{display:inline-flex;align-items:center;gap:7px}
+.mode svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;flex:none}
+.mode button:hover{color:var(--ink)}
+#reactor{scroll-margin-top:16px}
 
 .hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:start}
 .stack{display:grid;gap:16px;min-width:0}
@@ -91,7 +138,7 @@ h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 
 .dial svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .core{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;pointer-events:none}
 .core .k{font-family:var(--f-display);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
-.big{font-family:var(--f-data);font-weight:700;font-size:28px;font-size:clamp(17px,6.8cqw,38px);font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap;text-shadow:0 0 22px color-mix(in srgb,var(--ion) 50%,transparent)}
+.big{font-family:var(--f-data);font-weight:700;font-size:28px;font-size:clamp(17px,6.8cqw,38px);font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap;text-shadow:var(--tglow)}
 .big .c{color:var(--dim)}
 .big .m{font-size:.46em;color:var(--ion);margin-left:.12em;vertical-align:.7em}
 .earned{font-family:var(--f-data);font-size:13px;font-size:clamp(11px,3.2cqw,15px);color:var(--left)}
@@ -103,15 +150,15 @@ h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 
 .tick.major{stroke:var(--dim);stroke-width:1.6}
 .hlabel{fill:var(--dim);font-family:var(--f-data);font-size:11px;text-anchor:middle;dominant-baseline:middle}
 .seg{cursor:pointer;transition:fill .4s}
-.seg.done{fill:var(--done)}
-.seg.left{fill:color-mix(in srgb,var(--left) 60%,var(--void))}
+.seg.done{fill:var(--done-fill)}
+.seg.left{fill:var(--left-fill)}
 .seg.cur{fill:var(--left);filter:drop-shadow(0 0 8px var(--left))}
 .seg.sel{stroke:var(--ink);stroke-width:2}
 .seg:focus{outline:none}
 .seg:focus-visible{stroke:var(--ion);stroke-width:3}
 .seg-in{animation:segIn .5s ease-out both;animation-delay:calc(var(--i) * 35ms)}
 @keyframes segIn{from{opacity:.12}to{opacity:1}}
-#segFill{fill:var(--done);pointer-events:none}
+#segFill{fill:var(--done-fill);pointer-events:none}
 #pip{fill:var(--ion);filter:drop-shadow(0 0 6px var(--ion))}
 
 .readout{margin-top:14px;border-top:1px dashed var(--line);padding-top:14px;display:grid;gap:10px}
@@ -174,10 +221,10 @@ h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 
 
 /* day map */
 .daygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(36px,1fr));gap:6px}
-.day{position:relative;aspect-ratio:1;max-width:100%;border:0;padding:0;font-family:var(--f-data);font-size:12px;font-weight:700;color:var(--void);cursor:pointer;display:grid;place-items:center}
-.day.done{background:var(--done)}
-.day.left{background:color-mix(in srgb,var(--left) 60%,var(--void))}
-.day.today{background:linear-gradient(90deg,var(--done) var(--p,0%),var(--left) var(--p,0%));box-shadow:0 0 0 1px var(--ink),0 0 14px color-mix(in srgb,var(--left) 55%,transparent)}
+.day{position:relative;aspect-ratio:1;max-width:100%;border:0;padding:0;font-family:var(--f-data);font-size:12px;font-weight:700;color:var(--mark-ink);cursor:pointer;display:grid;place-items:center}
+.day.done{background:var(--done-fill)}
+.day.left{background:var(--left-fill)}
+.day.today{background:linear-gradient(90deg,var(--done-fill) var(--p,0%),var(--left-fill) var(--p,0%));box-shadow:0 0 0 1px var(--ink),0 0 14px color-mix(in srgb,var(--left) 55%,transparent)}
 .day.goal{outline:2px solid var(--gold);outline-offset:2px}
 .day.goal::after{content:"★";position:absolute;top:-9px;right:-6px;color:var(--gold);font-size:12px;line-height:1}
 .day.sel{box-shadow:0 0 0 2px var(--ion)}
@@ -241,7 +288,7 @@ table.grid{border-collapse:separate;border-spacing:0;font-family:var(--f-data);f
 .grid tr.today td.sc1,.grid tr.today td.sc2{background:color-mix(in srgb,var(--ion) 24%,var(--hull));color:var(--ink);font-weight:700}
 .grid tr.today td.x{background:color-mix(in srgb,var(--ion) 13%,var(--hull))}
 .grid tr.click{cursor:pointer}
-.grid tr.click:hover td{filter:brightness(1.3)}
+.grid tr.click:hover td{filter:var(--row-hover)}
 .grid tr.click:focus-visible{outline:2px solid var(--ion);outline-offset:-2px}
 .grid tfoot td{background:var(--hull-hi);font-weight:700;border-top:1px solid var(--ion)}
 .grid tr.dayhead td{background:var(--hull-hi);text-align:left;color:var(--ion);font-family:var(--f-display);font-size:11px;letter-spacing:.08em;border-top:1px solid var(--ion)}
@@ -251,7 +298,8 @@ table.grid{border-collapse:separate;border-spacing:0;font-family:var(--f-data);f
 footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin:0 auto}
 @media (prefers-reduced-motion:reduce){.orbit,.pulse,.seg-in{animation:none}.seg,.gauge-fill{transition:none}}
 </style>
-
+</head>
+<body>
 <div class="wrap">
   <header class="top">
     <div class="brand">
@@ -278,10 +326,55 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
     <span class="chip"><em>Day</em><b id="chDay">01 / 41</b></span>
     <span class="chip"><em>Hour</em><b id="chHr">16 / 24</b></span>
     <span class="chip"><em>Rate</em><b id="chRate">0.777%/hr · 20.41%/day</b></span>
-    <a class="chip link" href="#sheet"><em>Jump to</em><b>Spreadsheet ↓</b></a>
+    <a class="chip link" href="#reactor"><em>Jump to</em><b>Live dial ↓</b></a>
+    <div class="seg-toggle mode" role="group" aria-label="Display mode">
+      <button type="button" id="mDay" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.2v1.9M8 12.9v1.9M1.2 8h1.9M12.9 8h1.9M3.2 3.2l1.3 1.3M11.5 11.5l1.3 1.3M3.2 12.8l1.3-1.3M11.5 4.5l1.3-1.3"/></svg>Day</button>
+      <button type="button" id="mNight" aria-pressed="true"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.4 10.2A5.6 5.6 0 0 1 5.8 2.6a5.6 5.6 0 1 0 7.6 7.6z"/></svg>Night</button>
+    </div>
   </div>
 
-  <section class="hero">
+  <section class="panel" id="sheet">
+    <div class="ph">
+      <h2>Spreadsheet</h2>
+      <div class="sheet-ctl">
+        <div class="tabs" role="tablist" aria-label="Spreadsheet views" id="tabs">
+          <button type="button" role="tab" id="tabDays" aria-controls="pnDays" aria-selected="true">Day by Day</button>
+          <button type="button" role="tab" id="tabHours" aria-controls="pnHours" aria-selected="false" tabindex="-1">Hour by Hour</button>
+          <button type="button" role="tab" id="tabPlan" aria-controls="pnPlan" aria-selected="false" tabindex="-1">Withdrawal plan</button>
+        </div>
+        <button type="button" class="ghost" id="jumpNow">Jump to now</button>
+      </div>
+    </div>
+
+    <div role="tabpanel" id="pnDays" aria-labelledby="tabDays">
+      <p class="note top">Balance at the end of each hour, New York time. Red = completed · Green = remaining · Gold ★ = goal hour. Tap a day to open its 24 hours.</p>
+      <div class="tbl-wrap" id="wrapDays"><table class="grid" id="tblDays"></table></div>
+    </div>
+
+    <div role="tabpanel" id="pnHours" aria-labelledby="tabHours" hidden>
+      <div class="hbar">
+        <div class="daynav">
+          <button type="button" class="ghost" id="hPrev" aria-label="Previous day">‹</button>
+          <select id="hDay" aria-label="Day"></select>
+          <button type="button" class="ghost" id="hNext" aria-label="Next day">›</button>
+        </div>
+        <div class="seg-toggle" role="group" aria-label="Rows to show">
+          <button type="button" id="hOne" aria-pressed="true">One day</button>
+          <button type="button" id="hAll" aria-pressed="false">All days</button>
+        </div>
+      </div>
+      <div class="hsum" id="hSum"></div>
+      <div class="tbl-wrap" id="wrapHours"><table class="grid" id="tblHours"></table></div>
+    </div>
+
+    <div role="tabpanel" id="pnPlan" aria-labelledby="tabPlan" hidden>
+      <div class="hsum"><div class="kvs" id="planSum"></div></div>
+      <p class="note top">Each night at 12:00 AM New York time the withdraw share of that day's profit is paid out. The rest stays in and keeps compounding. Tap a day to see its hours.</p>
+      <div class="tbl-wrap" id="wrapPlan"><table class="grid" id="tblPlan"></table></div>
+    </div>
+  </section>
+
+  <section class="hero" id="reactor">
     <div class="panel">
       <div class="ph">
         <h2>Today's 24-hour cycle</h2>
@@ -370,47 +463,6 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
     </form>
   </section>
 
-  <section class="panel" id="sheet">
-    <div class="ph">
-      <h2>Spreadsheet</h2>
-      <div class="sheet-ctl">
-        <div class="tabs" role="tablist" aria-label="Spreadsheet views" id="tabs">
-          <button type="button" role="tab" id="tabDays" aria-controls="pnDays" aria-selected="true">Day by Day</button>
-          <button type="button" role="tab" id="tabHours" aria-controls="pnHours" aria-selected="false" tabindex="-1">Hour by Hour</button>
-          <button type="button" role="tab" id="tabPlan" aria-controls="pnPlan" aria-selected="false" tabindex="-1">Withdrawal plan</button>
-        </div>
-        <button type="button" class="ghost" id="jumpNow">Jump to now</button>
-      </div>
-    </div>
-
-    <div role="tabpanel" id="pnDays" aria-labelledby="tabDays">
-      <p class="note top">Balance at the end of each hour, New York time. Red = completed · Green = remaining · Gold ★ = goal hour. Tap a day to open its 24 hours.</p>
-      <div class="tbl-wrap" id="wrapDays"><table class="grid" id="tblDays"></table></div>
-    </div>
-
-    <div role="tabpanel" id="pnHours" aria-labelledby="tabHours" hidden>
-      <div class="hbar">
-        <div class="daynav">
-          <button type="button" class="ghost" id="hPrev" aria-label="Previous day">‹</button>
-          <select id="hDay" aria-label="Day"></select>
-          <button type="button" class="ghost" id="hNext" aria-label="Next day">›</button>
-        </div>
-        <div class="seg-toggle" role="group" aria-label="Rows to show">
-          <button type="button" id="hOne" aria-pressed="true">One day</button>
-          <button type="button" id="hAll" aria-pressed="false">All days</button>
-        </div>
-      </div>
-      <div class="hsum" id="hSum"></div>
-      <div class="tbl-wrap" id="wrapHours"><table class="grid" id="tblHours"></table></div>
-    </div>
-
-    <div role="tabpanel" id="pnPlan" aria-labelledby="tabPlan" hidden>
-      <div class="hsum"><div class="kvs" id="planSum"></div></div>
-      <p class="note top">Each night at 12:00 AM New York time the withdraw share of that day's profit is paid out. The rest stays in and keeps compounding. Tap a day to see its hours.</p>
-      <div class="tbl-wrap" id="wrapPlan"><table class="grid" id="tblPlan"></table></div>
-    </div>
-  </section>
-
   <footer>Projection only: every figure is calculated from the parameters on this page, not read from any account. Times are New York (America/New_York), worked out automatically from your device's clock wherever you are.</footer>
 </div>
 
@@ -429,6 +481,35 @@ try {
   if (raw) { const s = JSON.parse(raw); if (s && typeof s === "object") P = { ...DEF, ...s }; }
 } catch (e) {}
 function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
+
+/* ---------- day / night ---------- */
+const MODE_KEY = "growth-reactor-ledger:mode";
+const root = document.documentElement;
+let mqLight = null;
+try { mqLight = window.matchMedia("(prefers-color-scheme: light)"); } catch (e) {}
+function modeNow() {
+  const m = root.getAttribute("data-mode");
+  if (m === "day" || m === "night") return m;
+  const t = root.getAttribute("data-theme");
+  if (t === "light") return "day";
+  if (t === "dark") return "night";
+  return mqLight && mqLight.matches ? "day" : "night";
+}
+function syncMode() {
+  const m = modeNow();
+  $("mDay").setAttribute("aria-pressed", String(m === "day"));
+  $("mNight").setAttribute("aria-pressed", String(m === "night"));
+}
+function setMode(m) {
+  root.setAttribute("data-mode", m);
+  try { localStorage.setItem(MODE_KEY, m); } catch (e) {}
+  syncMode();
+}
+$("mDay").addEventListener("click", () => setMode("day"));
+$("mNight").addEventListener("click", () => setMode("night"));
+if (mqLight) { try { mqLight.addEventListener("change", syncMode); } catch (e) { try { mqLight.addListener(syncMode); } catch (e2) {} } }
+if ("MutationObserver" in window) new MutationObserver(syncMode).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+syncMode();
 
 /* ---------- formatting ---------- */
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1073,5 +1154,5 @@ if ("ResizeObserver" in window) new ResizeObserver(onResize).observe($("chart"))
 else window.addEventListener("resize", onResize);
 })();
 </script>
-
-</body></html>
+</body>
+</html>
