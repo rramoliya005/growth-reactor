@@ -119,7 +119,7 @@ h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 
 .goal h2::before{background:var(--gold);box-shadow:0 0 8px var(--gold)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--dim)}
 .legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px}
-.sw-done{background:var(--done-fill)}.sw-left{background:var(--left-fill)}.sw-gold{background:var(--gold)}
+.sw-pre{background:color-mix(in srgb,var(--line) 55%,transparent)}.sw-done{background:var(--done-fill)}.sw-left{background:var(--left-fill)}.sw-gold{background:var(--gold)}
 
 /* day / night switch */
 .mode{margin-left:auto}
@@ -152,6 +152,7 @@ h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 
 .seg{cursor:pointer;transition:fill .4s}
 .seg.done{fill:var(--done-fill)}
 .seg.left{fill:var(--left-fill)}
+.seg.pre{fill:color-mix(in srgb,var(--line) 55%,transparent);cursor:default}
 .seg.cur{fill:var(--left);filter:drop-shadow(0 0 8px var(--left))}
 .seg.sel{stroke:var(--ink);stroke-width:2}
 .seg:focus{outline:none}
@@ -166,7 +167,7 @@ h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 
 .ro-hr{font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:.06em}
 .ro-time{font-family:var(--f-data);color:var(--dim);font-size:13px}
 .pill{font-family:var(--f-display);font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:3px 8px;border:1px solid currentColor}
-.pill.done{color:var(--done)}.pill.cur{color:var(--left)}.pill.left{color:var(--left)}.pill.gold{color:var(--gold)}
+.pill.pre{color:var(--faint)}.pill.done{color:var(--done)}.pill.cur{color:var(--left)}.pill.left{color:var(--left)}.pill.gold{color:var(--gold)}
 .linkish{margin-left:auto;background:none;border:1px solid var(--line);color:var(--ion);font:inherit;font-size:12px;padding:4px 10px;cursor:pointer}
 .kvs{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px}
 .kv{display:grid;gap:2px;padding:8px 10px;background:color-mix(in srgb,var(--void) 55%,transparent);border:1px solid var(--line);min-width:0}
@@ -238,13 +239,13 @@ h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 
 .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width:420px){.fields{grid-template-columns:minmax(0,1fr)}}
 .fields label{display:grid;gap:6px;font-family:var(--f-display);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);min-width:0}
-.fields input{width:100%;min-width:0;background:var(--void);border:1px solid var(--line);color:var(--ink);font-family:var(--f-data);font-size:14px;padding:9px 10px;letter-spacing:0;text-transform:none;border-radius:0}
-.fields input[aria-invalid="true"]{border-color:var(--done)}
+.fields input,.fields select{width:100%;min-width:0;background:var(--void);border:1px solid var(--line);color:var(--ink);font-family:var(--f-data);font-size:14px;padding:9px 10px;letter-spacing:0;text-transform:none;border-radius:0}
+.fields input[aria-invalid="true"],.fields select[aria-invalid="true"]{border-color:var(--done)}
 .ghost{background:none;border:1px solid var(--line);color:var(--dim);font-family:var(--f-display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 12px;cursor:pointer}
 .ghost:hover{color:var(--ink);border-color:var(--dim)}
 .err{color:var(--done);font-size:12px;margin:10px 0 0;min-height:1.2em}
 .fine{color:var(--faint);font-size:12px;margin:4px 0 0}
-button:focus-visible,input:focus-visible{outline:2px solid var(--ion);outline-offset:2px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ion);outline-offset:2px}
 /* ---------- spreadsheet ---------- */
 .wrap{grid-template-columns:minmax(0,1fr)}
 #sheet{scroll-margin-top:16px}
@@ -278,6 +279,8 @@ table.grid{border-collapse:separate;border-spacing:0;font-family:var(--f-data);f
 .grid td.wd{color:var(--gold)}
 .grid td.nil{color:var(--faint)}
 .grid td.c-done{background:color-mix(in srgb,var(--done) 22%,var(--void));color:color-mix(in srgb,var(--done) 45%,var(--ink))}
+.grid td.c-pre{background:var(--void);color:var(--faint);text-align:center}
+.grid tr.r-pre td{background:var(--void);color:var(--faint)}
 .grid td.c-left{background:color-mix(in srgb,var(--left) 11%,var(--void));color:color-mix(in srgb,var(--left) 55%,var(--ink))}
 .grid td.c-cur{background:color-mix(in srgb,var(--left) 32%,var(--void));color:var(--ink);box-shadow:inset 0 0 0 1px var(--left)}
 .grid td.c-gold{background:color-mix(in srgb,var(--gold) 34%,var(--void));color:var(--ink);font-weight:700;box-shadow:inset 0 0 0 2px var(--gold)}
@@ -311,7 +314,7 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       </svg>
       <div>
         <h1>Growth<span>//</span>Reactor</h1>
-        <p class="sub" id="sub">Projection · $800 → $1,000,000 · 0.887% per hour · reinvest 90% / withdraw 10%</p>
+        <p class="sub" id="sub">Projection · $1,600 → $1,000,000 · 0.813% per hour · from Nov 25, 12:00 PM · reinvest 90% / withdraw 10%</p>
       </div>
     </div>
     <div class="clock" aria-live="off">
@@ -325,7 +328,7 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
     <span class="chip state" id="chState" data-phase="live"><span class="dot pulse" aria-hidden="true"></span><span id="chStateTx">Compounding</span></span>
     <span class="chip"><em>Day</em><b id="chDay">01 / 37</b></span>
     <span class="chip"><em>Hour</em><b id="chHr">16 / 24</b></span>
-    <span class="chip"><em>Rate</em><b id="chRate">0.887%/hr · 23.61%/day</b></span>
+    <span class="chip"><em>Rate</em><b id="chRate">0.813%/hr · 21.45%/day</b></span>
     <a class="chip link" href="#reactor"><em>Jump to</em><b>Live dial ↓</b></a>
     <div class="seg-toggle mode" role="group" aria-label="Display mode">
       <button type="button" id="mDay" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.2v1.9M8 12.9v1.9M1.2 8h1.9M12.9 8h1.9M3.2 3.2l1.3 1.3M11.5 11.5l1.3 1.3M3.2 12.8l1.3-1.3M11.5 4.5l1.3-1.3"/></svg>Day</button>
@@ -378,7 +381,7 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
     <div class="panel">
       <div class="ph">
         <h2>Today's 24-hour cycle</h2>
-        <span class="legend"><span><i class="sw-done"></i>Completed</span><span><i class="sw-left"></i>Remaining</span></span>
+        <span class="legend"><span><i class="sw-done"></i>Completed</span><span><i class="sw-left"></i>Remaining</span><span><i class="sw-pre"></i>Before start</span></span>
       </div>
       <div class="dial">
         <svg id="dial" viewBox="0 0 400 400" role="group" aria-label="24 hours of today, midnight at the top"></svg>
@@ -396,12 +399,12 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       <div class="panel ledger">
         <div class="ph"><h2>Today's ledger</h2><span class="legend" id="ledgerDate">Wed, Nov 25</span></div>
         <dl>
-          <dt>Opening <small>12:00 AM</small></dt><dd id="lgOpen">$800.00</dd>
-          <dt id="lgStepLabel">At 3:00 PM <small>last full hour</small></dt><dd id="lgStep">$800.00</dd>
-          <dt>Profit today <small>full day</small></dt><dd id="lgProfit">$188.86</dd>
-          <dt id="lgReLabel">Reinvest 90%</dt><dd id="lgRe">$169.97</dd>
-          <dt id="lgWdLabel">Withdraw 10% <small>paid at midnight</small></dt><dd class="wd" id="lgWd">$18.89</dd>
-          <dt class="em">Close at midnight</dt><dd class="em" id="lgClose">$969.97</dd>
+          <dt>Opening <small id="lgOpenAt">12:00 PM</small></dt><dd id="lgOpen">$1,600.00</dd>
+          <dt id="lgStepLabel">At 3:00 PM <small>last full hour</small></dt><dd id="lgStep">$1,600.00</dd>
+          <dt>Profit today <small>full day</small></dt><dd id="lgProfit">$163.27</dd>
+          <dt id="lgReLabel">Reinvest 90%</dt><dd id="lgRe">$146.94</dd>
+          <dt id="lgWdLabel">Withdraw 10% <small>paid at midnight</small></dt><dd class="wd" id="lgWd">$16.33</dd>
+          <dt class="em">Close at midnight</dt><dd class="em" id="lgClose">$1,746.94</dd>
           <dt>Next payout in</dt><dd id="lgNext">9h 00m</dd>
           <dt>Withdrawn so far <small>finished days</small></dt><dd id="lgTotal">$0.00</dd>
         </dl>
@@ -410,11 +413,11 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       <div class="panel goal">
         <div class="ph"><h2>Goal</h2><span class="pill gold" id="goalTarget">$1,000,000</span></div>
         <div class="gauge" role="progressbar" aria-label="Progress to goal" aria-valuemin="0" aria-valuemax="100" id="gauge"><div class="gauge-fill" id="gaugeFill"></div></div>
-        <div class="gauge-row"><span class="pct" id="goalPct">0.08%</span><span class="togo" id="goalTo">$999,200.00 to go</span></div>
+        <div class="gauge-row"><span class="pct" id="goalPct">0.16%</span><span class="togo" id="goalTo">$998,400.00 to go</span></div>
         <div class="eta">
           <span class="lbl" id="goalEtaK">Reaches the goal at · New York time</span>
-          <span class="eta-v" id="goalEta">Thu, Dec 31 · 11:00 PM</span>
-          <span class="dimtext" id="goalWhich">Day 37 · Hr 23</span>
+          <span class="eta-v" id="goalEta">Thu, Dec 31 · 10:00 PM</span>
+          <span class="dimtext" id="goalWhich">Day 37 · Hr 22</span>
         </div>
         <div class="countdown" id="countdown">
           <div><b id="cdD">36</b><span>days</span></div>
@@ -455,11 +458,12 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
         <label for="pGoal">Goal ($)<input id="pGoal" type="number" min="1" step="any" inputmode="decimal"></label>
         <label for="pRate">Growth per hour (%)<input id="pRate" type="number" min="0" step="any" inputmode="decimal"></label>
         <label for="pWd">Withdraw share (%)<input id="pWd" type="number" min="0" max="100" step="any" inputmode="decimal"></label>
-        <label for="pStart">Starts 12:00 AM on<input id="pStart" type="date"></label>
+        <label for="pStart">Start date<input id="pStart" type="date"></label>
+        <label for="pHr">Start time<select id="pHr"></select></label>
         <label for="pEnd">Ends 12:00 AM on<input id="pEnd" type="date"></label>
       </div>
       <p class="err" id="perr" role="alert"></p>
-      <p class="fine">Changes apply instantly and are saved in this browser only. Days run midnight to midnight, New York time.</p>
+      <p class="fine">Changes apply instantly and are saved in this browser only. Day 1 begins at the start time; after that, days run midnight to midnight, New York time.</p>
     </form>
   </section>
 
@@ -472,8 +476,8 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
 const $ = (id) => document.getElementById(id);
 const SVGNS = "http://www.w3.org/2000/svg";
 const HOUR = 36e5, DAY = 864e5;
-const DEF = { bal: 800, rate: 0.887, wd: 10, start: "2026-11-25", end: "2027-01-01", goal: 1000000 };
-const KEY = "growth-reactor-ledger:params:v10";
+const DEF = { bal: 1600, rate: 0.813, wd: 10, start: "2026-11-25", hr: 12, end: "2027-01-01", goal: 1000000 };
+const KEY = "growth-reactor-ledger:params:v12";
 
 let P = { ...DEF };
 try {
@@ -556,35 +560,38 @@ function build() {
   let D = Math.round((e - s) / DAY);
   if (!(D >= 1)) D = 1;
   if (D > 3660) D = 3660;
+  // Day 1 starts at the chosen hour (off0 hours are skipped); every later day runs midnight to midnight.
+  const off0 = Math.max(0, Math.min(23, Math.floor(P.hr) || 0));
   const days = [];
   let open = P.bal;
   for (let i = 0; i < D; i++) {
-    const profit = open * g, w = profit * q, r = profit - w, close = open + r;
-    days.push({ i, date: s + i * DAY, open, profit, w, r, close });
+    const off = i === 0 ? off0 : 0, n = 24 - off;
+    const profit = open * (Math.pow(1 + h, n) - 1), w = profit * q, r = profit - w, close = open + r;
+    days.push({ i, date: s + i * DAY, off, n, open, profit, w, r, close });
     open = close;
   }
   let goal = null;
   for (const d of days) {
-    if (d.open * Math.pow(1 + h, 24) >= P.goal) {
+    if (d.open * Math.pow(1 + h, d.n) >= P.goal) {
       let k = d.open >= P.goal ? 1 : Math.ceil(Math.log(P.goal / d.open) / Math.log(1 + h) - 1e-9);
-      k = Math.min(24, Math.max(1, k));
+      k = Math.min(d.n, Math.max(1, k)) + d.off;
       goal = { day: d.i, hr: k, at: d.date + k * HOUR };
       break;
     }
   }
-  M = { h, q, g, s, D, days, goal };
+  M = { h, q, g, s, off0, t0: s + off0 * HOUR, hours: D * 24 - off0, D, days, goal };
 }
 
 function state(now) {
   const rel = (now - M.s) / HOUR;
   let di, hf, phase;
-  if (rel < 0) { di = 0; hf = 0; phase = "pending"; }
+  if (rel < M.off0) { di = 0; hf = M.off0; phase = "pending"; }
   else if (rel >= M.D * 24) { di = M.D - 1; hf = 24; phase = "done"; }
   else { di = Math.floor(rel / 24); hf = rel - di * 24; phase = "live"; }
   const d = M.days[di];
-  const live = d.open * Math.pow(1 + M.h, hf);
+  const live = d.open * Math.pow(1 + M.h, Math.max(0, hf - d.off));
   const j = Math.min(24, Math.floor(hf));
-  const stepped = d.open * Math.pow(1 + M.h, j);
+  const stepped = d.open * Math.pow(1 + M.h, Math.max(0, j - d.off));
   let withdrawn = 0;
   for (let i = 0; i < di; i++) withdrawn += M.days[i].w;
   if (phase === "done") withdrawn += d.w;
@@ -638,13 +645,15 @@ function buildDial() {
 }
 
 function hourStatus(st, k) {
+  if (k <= st.d.off) return "pre";
+  if (st.phase === "pending") return "left";
   if (st.phase === "done" || k <= st.j) return "done";
   if (st.phase === "live" && k === st.j + 1) return "cur";
   return "left";
 }
-const ST_LABEL = { done: "Completed", cur: "In progress", left: "Remaining" };
+const ST_LABEL = { pre: "Before start", done: "Completed", cur: "In progress", left: "Remaining" };
 function hourInfo(d, k) {
-  const start = d.open * Math.pow(1 + M.h, k - 1), end = d.open * Math.pow(1 + M.h, k), earned = end - start;
+  const start = d.open * Math.pow(1 + M.h, Math.max(0, k - 1 - d.off)), end = d.open * Math.pow(1 + M.h, Math.max(0, k - d.off)), earned = end - start;
   return { k, start, end, earned, re: earned * (1 - M.q), wd: earned * M.q, from: d.date + (k - 1) * HOUR, to: d.date + k * HOUR };
 }
 
@@ -666,7 +675,7 @@ function renderDial(st) {
 
 function renderReadout(st) {
   if (!st) return;
-  const k = hoverHr || selHr || (st.phase === "done" ? 24 : st.phase === "live" ? st.j + 1 : 1);
+  const k = hoverHr || selHr || (st.phase === "done" ? 24 : st.phase === "live" ? st.j + 1 : st.d.off + 1);
   const h = hourInfo(st.d, k), s = hourStatus(st, k);
   const isGoal = M.goal && M.goal.day === st.di && M.goal.hr === k;
   const reTx = pctTx(100 - P.wd), wdTx = pctTx(P.wd);
@@ -692,7 +701,7 @@ function renderLive() {
   const now = Date.now() + offset;
   const st = lastSt, rel = (now - M.s) / HOUR;
   let hf = st.phase === "live" ? Math.min(24, Math.max(0, rel - st.di * 24)) : st.hf;
-  const v = st.d.open * Math.pow(1 + M.h, hf);
+  const v = st.d.open * Math.pow(1 + M.h, Math.max(0, hf - st.d.off));
   const s = usd.format(v);
   $("liveMain").textContent = s.slice(0, -3);
   $("liveCents").textContent = s.slice(-3);
@@ -722,18 +731,19 @@ function renderTop(st, tz) {
   $("chHr").textContent = st.phase === "live" ? `${pad(st.j + 1)} / 24` : st.phase === "done" ? "24 / 24" : "— / 24";
   $("chRate").textContent = `${pctTx(P.rate)}/hr · ${(M.g * 100).toFixed(2)}%/day`;
   const chs = $("chState"); chs.dataset.phase = st.phase;
-  $("chStateTx").textContent = st.phase === "live" ? "Compounding" : st.phase === "pending" ? `Starts ${fDay.format(M.s)}` : "Run complete";
+  $("chStateTx").textContent = st.phase === "live" ? "Compounding" : st.phase === "pending" ? `Starts ${fDay.format(M.t0)} · ${fT.format(M.t0)}` : "Run complete";
   let next;
   if (st.phase === "live") {
     const left = Math.max(0, Math.round((st.j + 1 - st.hf) * 3600));
     next = `Next step in ${pad(Math.floor(left / 60))}:${pad(left % 60)}`;
-  } else if (st.phase === "pending") next = `Starts in ${dur(M.s - st.now)}`;
+  } else if (st.phase === "pending") next = `Starts in ${dur(M.t0 - st.now)}`;
   else next = "All days complete";
   $("nextLine").textContent = next;
 }
 function renderLedger(st) {
   const d = st.d;
   $("ledgerDate").textContent = fDay.format(d.date);
+  $("lgOpenAt").textContent = fT.format(d.date + d.off * HOUR);
   $("lgOpen").textContent = usd.format(d.open);
   $("lgStepLabel").innerHTML = st.phase === "pending" ? "At start <small>no hours yet</small>" : `At ${fT.format(d.date + st.j * HOUR)} <small>last full hour</small>`;
   $("lgStep").textContent = usd.format(st.stepped);
@@ -822,7 +832,7 @@ function drawChart(st) {
   const box = $("chart");
   const W = Math.max(300, Math.round(box.clientWidth || 800)), H = W < 560 ? 230 : 300;
   const m = { l: 56, r: 14, t: 22, b: 28 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
-  const pts = [[0, P.bal]].concat(M.days.map((d) => [d.i + 1, d.close]));
+  const pts = [[M.off0 / 24, P.bal]].concat(M.days.map((d) => [d.i + 1, d.close]));
   const ys = pts.map((p) => p[1]);
   const maxY = Math.max(Math.max.apply(null, ys), P.goal), minY = Math.min.apply(null, ys);
   let y, ticks = [];
@@ -858,17 +868,18 @@ function drawChart(st) {
     tx.textContent = fMD.format(M.s + t * DAY);
   }
 
-  const nowT = Math.max(0, Math.min(M.D, st.rel / 24));
+  const nowT = Math.max(pts[0][0], Math.min(M.D, st.rel / 24));
   const i0 = Math.min(M.D - 1, Math.floor(nowT));
   const y0v = pts[i0][1], y1v = pts[Math.min(pts.length - 1, i0 + 1)][1];
-  const nowV = y0v * Math.pow(y1v / y0v, nowT - i0);
+  const fr = i0 === 0 ? (nowT - pts[0][0]) / (1 - pts[0][0]) : nowT - i0;
+  const nowV = y0v * Math.pow(y1v / y0v, fr);
   const P2 = (t, v) => `${x(t).toFixed(1)},${y(v).toFixed(1)}`;
   const past = pts.filter((p) => p[0] <= nowT).map((p) => P2(p[0], p[1]));
   past.push(P2(nowT, nowV));
   const future = [P2(nowT, nowV)].concat(pts.filter((p) => p[0] > nowT).map((p) => P2(p[0], p[1])));
   const base = (m.t + ih).toFixed(1);
   const all = pts.map((p) => P2(p[0], p[1]));
-  el("path", { d: `M${x(0).toFixed(1)},${base}L${all.join("L")}L${x(M.D).toFixed(1)},${base}Z`, class: "area", fill: "url(#gArea)" }, svg);
+  el("path", { d: `M${x(pts[0][0]).toFixed(1)},${base}L${all.join("L")}L${x(M.D).toFixed(1)},${base}Z`, class: "area", fill: "url(#gArea)" }, svg);
 
   const gy = y(P.goal).toFixed(1);
   el("line", { x1: m.l, x2: W - m.r, y1: gy, y2: gy, class: "goal-ln" }, svg);
@@ -896,16 +907,19 @@ function drawChart(st) {
 }
 
 /* ---------- parameters ---------- */
-const F = { bal: $("pBal"), goal: $("pGoal"), rate: $("pRate"), wd: $("pWd"), start: $("pStart"), end: $("pEnd") };
+const F = { bal: $("pBal"), goal: $("pGoal"), rate: $("pRate"), wd: $("pWd"), start: $("pStart"), hr: $("pHr"), end: $("pEnd") };
+F.hr.innerHTML = Array.from({ length: 24 }, (_, n) => `<option value="${n}">${fT.format(Date.UTC(2000, 0, 1, n))}</option>`).join("");
+const subTx = () => `Projection · ${usd0.format(P.bal)} → ${gFmt(P.goal)} · ${pctTx(P.rate)} per hour · from ${fMD.format(M.t0)}, ${fT.format(M.t0)} · reinvest ${pctTx(100 - P.wd)} / withdraw ${pctTx(P.wd)}`;
 function fillForm() { for (const k in F) F[k].value = P[k]; }
 function readForm() {
-  const v = { bal: parseFloat(F.bal.value), goal: parseFloat(F.goal.value), rate: parseFloat(F.rate.value), wd: parseFloat(F.wd.value), start: F.start.value, end: F.end.value };
+  const v = { bal: parseFloat(F.bal.value), goal: parseFloat(F.goal.value), rate: parseFloat(F.rate.value), wd: parseFloat(F.wd.value), start: F.start.value, hr: parseInt(F.hr.value, 10), end: F.end.value };
   const bad = {}; let msg = "";
   const flag = (k, t) => { bad[k] = true; if (!msg) msg = t; };
   if (!(v.bal > 0)) flag("bal", "Starting balance must be more than $0.");
   if (!(v.goal > 0)) flag("goal", "Goal must be more than $0.");
   if (!(v.rate > 0 && v.rate < 100)) flag("rate", "Growth per hour must be between 0% and 100%.");
   if (!(v.wd >= 0 && v.wd <= 100)) flag("wd", "Withdraw share must be between 0% and 100%.");
+  if (!(v.hr >= 0 && v.hr <= 23)) flag("hr", "Pick a start time.");
   const s = parseDate(v.start), e = parseDate(v.end);
   if (isNaN(s)) flag("start", "Pick a start date.");
   if (isNaN(e) || (!isNaN(s) && e <= s)) flag("end", "The end must be at least one day after the start.");
@@ -917,7 +931,7 @@ function readForm() {
 function rebuild() {
   build(); buildDays(); buildDaySelect();
   selDay = null; selHr = null; hDaySel = null; sheetKey = "";
-  $("sub").textContent = `Projection · ${usd0.format(P.bal)} → ${gFmt(P.goal)} · ${pctTx(P.rate)} per hour · reinvest ${pctTx(100 - P.wd)} / withdraw ${pctTx(P.wd)}`;
+  $("sub").textContent = subTx();
   tick(); drawChart(lastSt);
 }
 $("params").addEventListener("input", () => { const v = readForm(); if (v) { P = v; save(); rebuild(); } });
@@ -943,6 +957,7 @@ function slot(k) {
   return a.ap === b.ap ? `${a.n}–${b.n} ${b.ap}` : `${a.n} ${a.ap}–${b.n} ${b.ap}`;
 }
 function cellStatus(st, i, k) {
+  if (k <= M.days[i].off) return "pre";
   if (st.phase === "done" || (st.phase === "live" && i < st.di)) return "done";
   if (st.phase === "pending" || i > st.di) return "left";
   return hourStatus(st, k);
@@ -966,15 +981,16 @@ function renderDaysTable(st) {
     tp += d.profit; tw += d.w; tr += d.r;
     let row = `<tr class="click${ds === "cur" ? " today" : ""}" data-day="${i}" tabindex="0"><td class="sc1">${i + 1}</td><td class="sc2">${fDay.format(d.date)}</td><td class="x">${usd.format(d.open)}</td>`;
     for (let k = 1; k <= 24; k++) {
+      if (k <= d.off) { row += `<td class="c-pre">–</td>`; continue; }
       const g = isGoalHr(i, k);
-      row += `<td class="c-${g ? "gold" : cellStatus(st, i, k)}">${g ? "★ " : ""}${usd.format(d.open * Math.pow(1 + M.h, k))}</td>`;
+      row += `<td class="c-${g ? "gold" : cellStatus(st, i, k)}">${g ? "★ " : ""}${usd.format(d.open * Math.pow(1 + M.h, k - d.off))}</td>`;
     }
-    const hrs = ds === "done" ? 24 : ds === "cur" ? st.j : 0;
-    row += `<td class="x">${usd.format(d.profit)}</td><td class="x wd">${usd.format(d.w)}</td><td class="x">${usd.format(d.r)}</td><td class="x em">${usd.format(d.close)}</td><td class="x">${hrs} / 24</td><td class="x">${pctFmt(d.close / P.goal)}</td></tr>`;
+    const hrs = ds === "done" ? d.n : ds === "cur" ? Math.max(0, st.j - d.off) : 0;
+    row += `<td class="x">${usd.format(d.profit)}</td><td class="x wd">${usd.format(d.w)}</td><td class="x">${usd.format(d.r)}</td><td class="x em">${usd.format(d.close)}</td><td class="x">${hrs} / ${d.n}</td><td class="x">${pctFmt(d.close / P.goal)}</td></tr>`;
     h += row;
   }
   const last = M.days[M.D - 1];
-  h += `</tbody><tfoot><tr><td class="sc1">Σ</td><td class="sc2">Total</td><td colspan="25" class="nil tl">${M.D} days · ${M.D * 24} hours</td><td>${usd.format(tp)}</td><td class="wd">${usd.format(tw)}</td><td>${usd.format(tr)}</td><td class="em">${usd.format(last.close)}</td><td colspan="2"></td></tr></tfoot>`;
+  h += `</tbody><tfoot><tr><td class="sc1">Σ</td><td class="sc2">Total</td><td colspan="25" class="nil tl">${M.D} days · ${M.hours} hours</td><td>${usd.format(tp)}</td><td class="wd">${usd.format(tw)}</td><td>${usd.format(tr)}</td><td class="em">${usd.format(last.close)}</td><td colspan="2"></td></tr></tfoot>`;
   return h;
 }
 
@@ -982,6 +998,8 @@ function hoursHead() {
   return `<thead><tr><th class="sc1">Hr</th><th>Time</th><th>Start balance</th><th>Earned</th><th>Reinvest ${pctTx(100 - P.wd)}</th><th>Withdraw ${pctTx(P.wd)}</th><th>End balance</th><th>Paid out</th><th>Progress</th><th>Status</th></tr></thead>`;
 }
 function hourRow(st, d, k) {
+  if (k <= d.off) return `<tr class="r-pre" data-h="${d.i}-${k}"><td class="sc1">${k}</td><td class="tl">${fT.format(d.date + (k - 1) * HOUR)} – ${fT.format(d.date + k * HOUR)}</td>` +
+    `<td colspan="7" class="tl">Plan starts at ${fT.format(d.date + d.off * HOUR)}</td><td class="tl"><span class="pill pre">${ST_LABEL.pre}</span></td></tr>`;
   const h = hourInfo(d, k), s = cellStatus(st, d.i, k), g = isGoalHr(d.i, k), paid = k === 24;
   return `<tr class="r-${g ? "gold" : s}" data-h="${d.i}-${k}"><td class="sc1">${k}</td><td class="tl">${fT.format(h.from)} – ${fT.format(h.to)}</td>` +
     `<td>${usd.format(h.start)}</td><td>${usd.format(h.earned)}</td><td>${usd.format(h.re)}</td><td>${usd.format(h.wd)}</td>` +
@@ -1013,9 +1031,9 @@ function renderHours(st) {
   } else {
     let tp = 0, tw = 0;
     for (const d of M.days) { tp += d.profit; tw += d.w; }
-    const doneHrs = st.phase === "done" ? M.D * 24 : st.phase === "pending" ? 0 : st.di * 24 + st.j;
+    const doneHrs = st.phase === "done" ? M.hours : st.phase === "pending" ? 0 : Math.max(0, st.di * 24 + st.j - M.off0);
     $("hSum").innerHTML = `<div class="kvs">` +
-      `<div class="kv"><span>Hours completed</span><b>${doneHrs} / ${M.D * 24}</b></div>` +
+      `<div class="kv"><span>Hours completed</span><b>${doneHrs} / ${M.hours}</b></div>` +
       `<div class="kv"><span>Total earned</span><b>${usd.format(tp)}</b></div>` +
       `<div class="kv"><span>Total withdrawn</span><b class="gold-t">${usd.format(tw)}</b></div>` +
       `<div class="kv"><span>Final close</span><b>${usd.format(M.days[M.D - 1].close)}</b></div></div>`;
@@ -1143,7 +1161,7 @@ function tick() {
 
 fillForm();
 build(); buildDial(); buildDays(); buildDaySelect();
-$("sub").textContent = `Projection · ${usd0.format(P.bal)} → ${gFmt(P.goal)} · ${pctTx(P.rate)} per hour · reinvest ${pctTx(100 - P.wd)} / withdraw ${pctTx(P.wd)}`;
+$("sub").textContent = subTx();
 tick();
 showTab(sheetTab);
 setInterval(tick, 1000);
