@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deadline Board</title>
+<meta name="description" content="Personal deadline board for study, business and trading.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light dark;
+  --bg:#EDF0F4; --col:#E2E7ED; --surface:#FFFFFF; --surface-2:#F5F7F9;
+  --ink:#16202B; --muted:#586473; --line:#D3DAE2;
+  --accent:#2747D9; --accent-ink:#FFFFFF; --accent-tint:#E5EAFF;
+  --danger:#BC3126; --danger-tint:#FCE8E5;
+  --study:#5B4BDB; --business:#B26F08; --trading:#0C8263; --personal:#B0436C;
+  --shadow:0 1px 2px rgba(22,32,43,.06), 0 2px 8px rgba(22,32,43,.05);
+  --display:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --body:"Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0E1319; --col:#151C24; --surface:#1B232D; --surface-2:#222C38;
+    --ink:#E6EBF1; --muted:#98A4B2; --line:#2D3947;
+    --accent:#8299FF; --accent-ink:#0E1319; --accent-tint:#1F2A52;
+    --danger:#FF7F72; --danger-tint:#3B1F1D;
+    --study:#A598FF; --business:#E9A944; --trading:#41C9A0; --personal:#EC84AB;
+    --shadow:0 1px 2px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{max-width:1400px;margin:0 auto;padding:28px 24px 40px}
+
+/* Header: the clock leads */
+.top{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"clock today" "clock stats";
+  column-gap:36px;row-gap:16px;align-items:end;padding-bottom:26px;border-bottom:1px solid var(--line)}
+.clock{grid-area:clock;width:216px;height:216px;align-self:center;display:block}
+.today{grid-area:today;min-width:0}
+h1{font-family:var(--display);font-weight:650;font-size:clamp(28px,4vw,46px);line-height:1.04;
+  letter-spacing:-.022em;margin:0 0 6px;font-variation-settings:"opsz" 96}
+.fulldate{margin:0;color:var(--muted);font-size:16px}
+.nextup{margin:16px 0 4px;font-size:16px;max-width:62ch}
+.nextup strong{font-weight:650}
+.clock-note{margin:0;color:var(--muted);font-size:13px}
+.stats{grid-area:stats;list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.stat{display:flex;align-items:baseline;gap:7px;padding:7px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--line)}
+.stat b{font-family:var(--display);font-size:21px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1}
+.stat span{color:var(--muted);font-size:13.5px}
+.stat.overdue.has{background:var(--danger-tint);border-color:color-mix(in srgb,var(--danger) 40%,var(--line))}
+.stat.overdue.has b,.stat.overdue.has span{color:var(--danger)}
+
+/* Clock face */
+.face{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.tick{stroke:var(--muted);stroke-width:1;stroke-linecap:round}
+.tick.hr{stroke:var(--ink);stroke-width:2.2}
+.num{fill:var(--ink);font-family:var(--display);font-size:12.5px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+.datewin rect{fill:var(--surface-2);stroke:var(--line)}
+.datewin text{fill:var(--ink);font-family:var(--body);font-size:9.5px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+.hand{stroke-linecap:round}
+.hand.hour{stroke:var(--ink);stroke-width:5.5}
+.hand.min{stroke:var(--ink);stroke-width:3.5}
+.hand.sec{stroke:var(--accent);stroke-width:1.6}
+.cap{fill:var(--accent)}
+.cap-dot{fill:var(--surface)}
+.dot{fill:var(--area);stroke:var(--surface);stroke-width:2}
+
+.area-study{--area:var(--study)}
+.area-business{--area:var(--business)}
+.area-trading{--area:var(--trading)}
+.area-personal{--area:var(--personal)}
+
+/* Toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:22px 0 16px}
+.areas{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);cursor:pointer;font-size:14px;font-weight:500}
+.chip .n{color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px}
+.chip[aria-pressed="true"]{border-color:var(--area);background:color-mix(in srgb,var(--area) 13%,var(--surface))}
+.chip.all{--area:var(--ink)}
+.chip.all[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.chip.all[aria-pressed="true"] .n{color:inherit;opacity:.7}
+.swatch{width:9px;height:9px;border-radius:50%;background:var(--area);flex:none}
+.tools{display:flex;gap:8px;align-items:center}
+.search{width:230px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.btn{border:1px solid transparent;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;background:none;font-size:14.5px;white-space:nowrap}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:var(--line);background:var(--surface)}
+.btn.ghost:hover{border-color:var(--muted)}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 35%,var(--line));background:var(--surface)}
+.link{background:none;border:0;padding:0;color:var(--accent);font-weight:600;cursor:pointer;font-size:13.5px}
+
+/* Board */
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
+.col{background:var(--col);border-radius:14px;padding:12px;min-height:180px;border:1.5px dashed transparent;
+  transition:border-color .15s, background-color .15s}
+.col.drop{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--col))}
+.col-head{display:grid;grid-template-columns:1fr auto;align-items:baseline;padding:2px 4px 10px}
+.col-head h2{margin:0;font-family:var(--display);font-size:17px;font-weight:650;letter-spacing:-.01em}
+.col-head .count{color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums;margin-left:4px}
+.col-head p{grid-column:1/-1;margin:0;color:var(--muted);font-size:13px}
+.cards{display:flex;flex-direction:column;gap:8px}
+.empty{margin:0;padding:18px 10px;text-align:center;color:var(--muted);font-size:13.5px;border:1px dashed var(--line);border-radius:10px}
+
+.card{background:var(--surface);border-radius:10px;padding:11px 12px 10px 15px;box-shadow:inset 3px 0 0 var(--area),var(--shadow);cursor:grab}
+.card.dragging{opacity:.45}
+.card.is-done{opacity:.72}
+.card-top{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:12.5px}
+.tag{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--muted)}
+.prio{font-weight:600;color:var(--muted)}
+.prio.high{color:var(--danger)}
+.card h3{margin:6px 0 2px;font-size:15.5px;line-height:1.3;font-weight:650}
+.title-btn{background:none;border:0;padding:0;margin:0;text-align:left;font:inherit;color:inherit;cursor:pointer;overflow-wrap:anywhere}
+.title-btn:hover{text-decoration:underline;text-underline-offset:3px}
+.notes{margin:2px 0 0;color:var(--muted);font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.due{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-top:9px;font-size:13px}
+.when{color:var(--muted)}
+.left{font-weight:600;font-variant-numeric:tabular-nums;padding:2px 8px;border-radius:6px;background:var(--surface-2)}
+.left.overdue{background:var(--danger-tint);color:var(--danger)}
+.left.soon{background:var(--accent-tint);color:var(--accent)}
+.left.done,.left.wait{color:var(--muted);font-weight:500}
+.card-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
+.status-pick{position:relative;display:inline-block}
+.status-pick select{appearance:none;-webkit-appearance:none;border:1px solid var(--line);border-radius:6px;background:var(--surface);
+  padding:4px 28px 4px 9px;font-size:13px;cursor:pointer}
+.status-pick::after{content:"";position:absolute;right:11px;top:50%;width:6px;height:6px;border-right:1.5px solid var(--muted);
+  border-bottom:1.5px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.edit{font-size:13px}
+
+/* Footer */
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-top:28px;padding-top:18px;
+  border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+.foot p{margin:0;max-width:64ch}
+.foot.warn p{color:var(--danger)}
+.foot-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Editor */
+dialog{border:0;border-radius:14px;padding:0;width:min(520px,calc(100% - 32px));background:var(--surface);color:var(--ink);
+  box-shadow:0 24px 64px rgba(0,0,0,.28)}
+dialog::backdrop{background:rgba(12,17,23,.5)}
+.form{padding:22px;display:grid;gap:14px}
+.form h2{margin:0;font-family:var(--display);font-size:22px;font-weight:650;letter-spacing:-.01em}
+.field{display:grid;gap:5px;min-width:0}
+.field>span,.field-label{font-size:13px;font-weight:600;color:var(--muted)}
+.field input,.field select,.field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}
+.field textarea{resize:vertical;min-height:72px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg label{flex:1;position:relative}
+.seg input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.seg span{display:block;text-align:center;padding:9px 6px;font-size:14px;font-weight:500}
+.seg label+label span{border-left:1px solid var(--line)}
+.seg input:checked+span{background:var(--ink);color:var(--surface)}
+.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:-2px}
+.form-actions{display:flex;gap:8px;align-items:center;margin-top:4px}
+.spacer{flex:1}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,16px);background:var(--ink);color:var(--surface);
+  padding:10px 16px;border-radius:10px;display:flex;gap:14px;align-items:center;font-size:14px;opacity:0;pointer-events:none;
+  transition:opacity .18s, transform .18s;max-width:calc(100% - 32px);z-index:10}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast .link{color:inherit;text-decoration:underline;text-underline-offset:3px}
+
+@media (max-width:1100px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:680px){
+  .wrap{padding:18px 16px 32px}
+  .board{grid-template-columns:1fr}
+  .top{grid-template-areas:"clock today" "stats stats";column-gap:16px;align-items:center}
+  .clock{width:128px;height:128px}
+  .fulldate{font-size:14px}
+  .nextup{font-size:14.5px;margin-top:10px}
+  .tools{width:100%}
+  .search{flex:1;width:auto;min-width:0}
+}
+@media (max-width:480px){.row{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.toast,.col{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <svg class="clock" id="clock" viewBox="0 0 200 200" role="img" aria-label="Analog clock">
+      <circle cx="100" cy="100" r="96" class="face"/>
+      <g id="ticks"></g>
+      <g id="nums"></g>
+      <g class="datewin"><rect x="115" y="92" width="40" height="16" rx="3"/><text id="dateText" x="135" y="100"></text></g>
+      <g id="dots"></g>
+      <line id="hourHand" class="hand hour" x1="100" y1="109" x2="100" y2="55"/>
+      <line id="minHand" class="hand min" x1="100" y1="112" x2="100" y2="30"/>
+      <line id="secHand" class="hand sec" x1="100" y1="117" x2="100" y2="21"/>
+      <circle cx="100" cy="100" r="4.2" class="cap"/>
+      <circle cx="100" cy="100" r="1.6" class="cap-dot"/>
+    </svg>
+    <div class="today">
+      <h1 id="greeting">Hello</h1>
+      <p class="fulldate" id="fulldate"></p>
+      <p class="nextup" id="nextup"></p>
+      <p class="clock-note">Coloured dots on the clock are deadlines in the next 12 hours.</p>
+    </div>
+    <ul class="stats" id="stats" aria-label="Summary"></ul>
+  </header>
+
+  <div class="toolbar">
+    <div class="areas" id="areas" role="group" aria-label="Show tasks from"></div>
+    <div class="tools">
+      <input type="search" class="search" id="search" placeholder="Search tasks" aria-label="Search tasks">
+      <button type="button" class="btn primary" id="newTask" title="New task (N)">New task</button>
+    </div>
+  </div>
+
+  <main class="board" id="board"></main>
+
+  <footer class="foot">
+    <p id="storageNote"></p>
+    <div class="foot-actions">
+      <button type="button" class="btn ghost" id="exportBtn">Backup tasks</button>
+      <button type="button" class="btn ghost" id="importBtn">Restore from backup</button>
+      <button type="button" class="btn danger" id="clearAllBtn">Delete all tasks</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </footer>
+</div>
+
+<dialog id="editor" aria-labelledby="editorTitle">
+  <form class="form" id="taskForm" method="dialog" novalidate>
+    <h2 id="editorTitle">New task</h2>
+    <label class="field"><span>Task</span>
+      <input name="taskTitle" required maxlength="140" placeholder="e.g. Physics lab report" autocomplete="off"></label>
+    <div class="row">
+      <label class="field"><span>Area</span><select name="area"></select></label>
+      <label class="field"><span>Status</span><select name="status"></select></label>
+    </div>
+    <div class="row">
+      <label class="field"><span>Due date and time</span><input type="datetime-local" name="due" required></label>
+      <div class="field">
+        <span class="field-label" id="prioLabel">Priority</span>
+        <div class="seg" role="radiogroup" aria-labelledby="prioLabel">
+          <label><input type="radio" name="priority" value="low"><span>Low</span></label>
+          <label><input type="radio" name="priority" value="normal"><span>Normal</span></label>
+          <label><input type="radio" name="priority" value="high"><span>High</span></label>
+        </div>
+      </div>
+    </div>
+    <label class="field"><span>Notes</span>
+      <textarea name="notes" rows="3" maxlength="1000" placeholder="Details, links, who you are waiting on"></textarea></label>
+    <div class="form-actions">
+      <button type="button" class="btn danger" id="deleteBtn">Delete</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+      <button type="submit" class="btn primary" id="saveBtn">Add task</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ---------- Edit these lists to rename columns or areas ---------- */
+  const STATUSES = [
+    { id: 'pending',   name: 'Pending',          hint: 'Not started yet' },
+    { id: 'progress',  name: 'In progress',      hint: 'Working on it now' },
+    { id: 'approval',  name: 'Pending approval', hint: 'Waiting on someone else' },
+    { id: 'submitted', name: 'Submitted',        hint: 'Done and handed in' }
+  ];
+  const AREAS = [
+    { id: 'study',    name: 'Study' },
+    { id: 'business', name: 'Business' },
+    { id: 'trading',  name: 'Trading' },
+    { id: 'personal', name: 'Personal' }
+  ];
+  /* ------------------------------------------------------------------ */
+
+  const PRIORITIES = ['low', 'normal', 'high'];
+  const KEY = 'deadline-board.v1';
+  const NS = 'http://www.w3.org/2000/svg';
+  const DAY = 86400000, HOUR = 3600000;
+
+  const $ = s => document.querySelector(s);
+  const form = $('#taskForm');
+  const field = n => form.elements.namedItem(n);
+  const editor = $('#editor');
+
+  let tasks = [];
+  let storageOK = true;
+  let filterArea = 'all';
+  let query = '';
+  let editingId = null;
+  let dragId = null;
+  let undoState = null;
+  let toastTimer = null;
+  let lastMinute = -1;
+
+  const fmtTime = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+  const fmtDay  = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+  const fmtFull = new Intl.DateTimeFormat(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const fmtWk   = new Intl.DateTimeFormat(undefined, { weekday: 'short' });
+
+  const pad = n => String(n).padStart(2, '0');
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const toLocalInput = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const parseDue = s => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(s || '');
+    if (!m) return null;
+    const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+    return isNaN(d.getTime()) ? null : d;
+  };
+  const statusName = id => STATUSES.find(s => s.id === id).name;
+  const areaName = id => AREAS.find(a => a.id === id).name;
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const snapshot = () => JSON.parse(JSON.stringify(tasks));
+
+  /* ---------- Storage ---------- */
+  function clean(t) {
+    if (!t || typeof t !== 'object') return null;
+    const title = String(t.title ?? '').trim().slice(0, 140);
+    const due = typeof t.due === 'string' && parseDue(t.due) ? t.due.slice(0, 16) : null;
+    if (!title || !due) return null;
+    return {
+      id: typeof t.id === 'string' && t.id ? t.id : uid(),
+      title,
+      area: AREAS.some(a => a.id === t.area) ? t.area : AREAS[0].id,
+      status: STATUSES.some(s => s.id === t.status) ? t.status : STATUSES[0].id,
+      priority: PRIORITIES.includes(t.priority) ? t.priority : 'normal',
+      due,
+      notes: String(t.notes ?? '').slice(0, 1000),
+      created: typeof t.created === 'string' ? t.created : new Date().toISOString(),
+      updated: typeof t.updated === 'string' ? t.updated : null
+    };
+  }
+  function load() {
+    let raw;
+    try { raw = localStorage.getItem(KEY); } catch (e) { storageOK = false; return null; }
+    if (raw === null) return null;
+    try {
+      const data = JSON.parse(raw);
+      return Array.isArray(data) ? data.map(clean).filter(Boolean) : [];
+    } catch (e) { return []; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(tasks)); storageOK = true; }
+    catch (e) { storageOK = false; }
+    renderStorageNote();
+  }
+  function seed() {
+    const now = new Date();
+    const day = (n, h, m) => { const d = new Date(now); d.setDate(d.getDate() + n); d.setHours(h, m, 0, 0); return toLocalInput(d); };
+    const hrs = n => { const d = new Date(now.getTime() + n * HOUR); d.setSeconds(0, 0); d.setMinutes(Math.round(d.getMinutes() / 15) * 15); return toLocalInput(d); };
+    return [
+      { title: 'Send invoice to client', area: 'business', status: 'pending', priority: 'high', due: hrs(3), notes: 'Include last month\u2019s hours and the payment link.' },
+      { title: 'Set price alerts for tomorrow', area: 'trading', status: 'pending', priority: 'normal', due: hrs(8), notes: 'Update levels on the watchlist before the open.' },
+      { title: 'Calculus problem set 6', area: 'study', status: 'progress', priority: 'high', due: day(2, 23, 59), notes: 'Chapters 4 and 5. Show all working.' },
+      { title: 'Chemistry lab report', area: 'study', status: 'progress', priority: 'normal', due: day(-1, 23, 59), notes: 'Graphs are done, discussion section left.' },
+      { title: 'History essay outline', area: 'study', status: 'approval', priority: 'normal', due: day(1, 12, 0), notes: 'Sent to my professor for sign-off before writing the full draft.' },
+      { title: 'Weekly trading journal review', area: 'trading', status: 'pending', priority: 'normal', due: day(3, 20, 0), notes: 'Log every trade and note where I broke my rules.' },
+      { title: 'Supplier price quote', area: 'business', status: 'submitted', priority: 'normal', due: day(-1, 17, 0), notes: '' }
+    ].map(t => clean({ ...t, id: uid() }));
+  }
+
+  /* ---------- Time helpers ---------- */
+  const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  function dueLabel(d, now) {
+    const tom = new Date(now); tom.setDate(tom.getDate() + 1);
+    const yes = new Date(now); yes.setDate(yes.getDate() - 1);
+    const day = sameDay(d, now) ? 'Today' : sameDay(d, tom) ? 'Tomorrow' : sameDay(d, yes) ? 'Yesterday' : fmtDay.format(d);
+    return `${day}, ${fmtTime.format(d)}`;
+  }
+  function span(ms) {
+    const mins = Math.floor(Math.abs(ms) / 60000);
+    if (mins < 1) return 'under a minute';
+    const d = Math.floor(mins / 1440), h = Math.floor((mins % 1440) / 60), m = mins % 60;
+    if (d >= 7) return `${d}d`;
+    if (d > 0) return h ? `${d}d ${h}h` : `${d}d`;
+    if (h > 0) return m ? `${h}h ${m}m` : `${h}h`;
+    return `${m}m`;
+  }
+  function timing(t, now) {
+    const diff = parseDue(t.due) - now;
+    if (t.status === 'submitted') return { text: 'Submitted', cls: 'done' };
+    if (t.status === 'approval') return diff > 0 ? { text: `in ${span(diff)}`, cls: 'wait' } : { text: 'Past due, waiting', cls: 'wait' };
+    if (diff <= 0) return { text: `${span(diff)} overdue`, cls: 'overdue' };
+    return { text: `in ${span(diff)}`, cls: diff < DAY ? 'soon' : '' };
+  }
+
+  /* ---------- Filtering ---------- */
+  const inArea = () => tasks.filter(t => filterArea === 'all' || t.area === filterArea);
+  function visible() {
+    const q = query.trim().toLowerCase();
+    return inArea().filter(t => !q || t.title.toLowerCase().includes(q) || t.notes.toLowerCase().includes(q));
+  }
+
+  /* ---------- Rendering ---------- */
+  function renderAll() {
+    renderAreas();
+    renderBoard();
+    renderHeader();
+    renderDots();
+    renderStorageNote();
+  }
+
+  function renderAreas() {
+    const el = $('#areas');
+    el.innerHTML = '';
+    for (const a of [{ id: 'all', name: 'All' }, ...AREAS]) {
+      const n = tasks.filter(t => t.status !== 'submitted' && (a.id === 'all' || t.area === a.id)).length;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip ' + (a.id === 'all' ? 'all' : 'area-' + a.id);
+      b.setAttribute('aria-pressed', String(filterArea === a.id));
+      b.title = `${plural(n, 'open task')}`;
+      b.innerHTML = (a.id === 'all' ? '' : '<span class="swatch"></span>') + `<span></span><span class="n">${n}</span>`;
+      b.children[a.id === 'all' ? 0 : 1].textContent = a.name;
+      b.addEventListener('click', () => { filterArea = a.id; renderAll(); });
+      el.append(b);
+    }
+  }
+
+  function renderBoard() {
+    const board = $('#board');
+    board.innerHTML = '';
+    const now = new Date();
+    const list = visible();
+    const filtered = filterArea !== 'all' || query.trim() !== '';
+    for (const s of STATUSES) {
+      const items = list.filter(t => t.status === s.id).sort((a, b) =>
+        s.id === 'submitted' ? parseDue(b.due) - parseDue(a.due) : parseDue(a.due) - parseDue(b.due));
+
+      const col = document.createElement('section');
+      col.className = 'col';
+      col.dataset.status = s.id;
+      col.setAttribute('aria-labelledby', 'h-' + s.id);
+
+      const head = document.createElement('header');
+      head.className = 'col-head';
+      head.innerHTML = `<h2 id="h-${s.id}"></h2><p></p>`;
+      head.querySelector('h2').textContent = s.name;
+      const count = document.createElement('span');
+      count.className = 'count';
+      count.textContent = items.length;
+      head.querySelector('h2').append(' ', count);
+      head.querySelector('p').textContent = s.hint;
+      if (s.id === 'submitted' && items.length) {
+        const c = document.createElement('button');
+        c.type = 'button'; c.className = 'link'; c.textContent = 'Clear';
+        c.title = 'Remove submitted tasks from the board';
+        c.addEventListener('click', clearSubmitted);
+        head.insertBefore(c, head.querySelector('p'));
+      }
+      col.append(head);
+
+      const cards = document.createElement('div');
+      cards.className = 'cards';
+      if (!items.length) {
+        const e = document.createElement('p');
+        e.className = 'empty';
+        e.textContent = filtered ? 'No matching tasks' : (s.id === 'pending' ? 'Add a task with New task' : 'Drag a task here');
+        cards.append(e);
+      }
+      for (const t of items) cards.append(card(t, now));
+      col.append(cards);
+
+      col.addEventListener('dragover', e => {
+        if (!dragId) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        col.classList.add('drop');
+      });
+      col.addEventListener('dragleave', e => { if (!col.contains(e.relatedTarget)) col.classList.remove('drop'); });
+      col.addEventListener('drop', e => {
+        e.preventDefault();
+        col.classList.remove('drop');
+        if (dragId) setStatus(dragId, s.id);
+      });
+      board.append(col);
+    }
+  }
+
+  function card(t, now) {
+    const el = document.createElement('article');
+    el.className = `card area-${t.area}` + (t.status === 'submitted' ? ' is-done' : '');
+    el.draggable = true;
+    el.dataset.id = t.id;
+    const tm = timing(t, now);
+    const prio = t.priority === 'high' ? '<span class="prio high">High priority</span>'
+               : t.priority === 'low' ? '<span class="prio">Low priority</span>' : '';
+    el.innerHTML = `
+      <div class="card-top"><span class="tag"><span class="swatch"></span><span class="area-name"></span></span>${prio}</div>
+      <h3><button type="button" class="title-btn"></button></h3>
+      ${t.notes ? '<p class="notes"></p>' : ''}
+      <div class="due"><span class="when"></span><span class="left ${tm.cls}" data-left></span></div>
+      <div class="card-foot">
+        <label class="status-pick"><span class="sr">Status</span><select></select></label>
+        <button type="button" class="link edit">Edit</button>
+      </div>`;
+    el.querySelector('.area-name').textContent = areaName(t.area);
+    el.querySelector('.title-btn').textContent = t.title;
+    if (t.notes) el.querySelector('.notes').textContent = t.notes;
+    el.querySelector('.when').textContent = dueLabel(parseDue(t.due), now);
+    el.querySelector('[data-left]').textContent = tm.text;
+
+    const sel = el.querySelector('select');
+    for (const s of STATUSES) sel.add(new Option(s.name, s.id, false, s.id === t.status));
+    sel.addEventListener('change', () => setStatus(t.id, sel.value));
+    el.querySelector('.title-btn').addEventListener('click', () => openEditor(t.id));
+    el.querySelector('.edit').addEventListener('click', () => openEditor(t.id));
+
+    el.addEventListener('dragstart', e => {
+      dragId = t.id;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', t.id);
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', () => {
+      dragId = null;
+      el.classList.remove('dragging');
+      document.querySelectorAll('.col.drop').forEach(c => c.classList.remove('drop'));
+    });
+    return el;
+  }
+
+  function renderHeader() {
+    const now = new Date(), h = now.getHours();
+    $('#greeting').textContent = h < 5 ? 'Working late' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+    $('#fulldate').textContent = fmtFull.format(now);
+
+    const scope = inArea();
+    const open = scope.filter(t => t.status !== 'submitted');
+    const active = scope.filter(t => t.status === 'pending' || t.status === 'progress');
+    const endToday = new Date(now); endToday.setHours(23, 59, 59, 999);
+    const stats = [
+      { n: active.filter(t => parseDue(t.due) <= now).length, label: 'overdue', cls: 'overdue' },
+      { n: open.filter(t => { const d = parseDue(t.due); return d > now && d <= endToday; }).length, label: 'due later today' },
+      { n: open.filter(t => { const d = parseDue(t.due); return d > now && d - now <= 7 * DAY; }).length, label: 'due in the next 7 days' },
+      { n: scope.filter(t => t.status === 'approval').length, label: 'waiting for approval' }
+    ];
+    const ul = $('#stats');
+    ul.innerHTML = '';
+    for (const s of stats) {
+      const li = document.createElement('li');
+      li.className = 'stat' + (s.cls ? ' ' + s.cls : '') + (s.n ? ' has' : '');
+      li.innerHTML = `<b>${s.n}</b><span>${s.label}</span>`;
+      ul.append(li);
+    }
+
+    const next = active.filter(t => parseDue(t.due) > now).sort((a, b) => parseDue(a.due) - parseDue(b.due))[0];
+    const p = $('#nextup');
+    p.textContent = '';
+    if (next) {
+      const d = parseDue(next.due);
+      const strong = document.createElement('strong');
+      strong.textContent = next.title;
+      p.append('Next up: ', strong, `, due in ${span(d - now)} (${dueLabel(d, now)})`);
+    } else {
+      p.textContent = active.length ? 'No upcoming deadlines, only overdue ones.' : 'Nothing due. Add a task with New task.';
+    }
+    $('#clock').setAttribute('aria-label', `Analog clock showing ${fmtTime.format(now)}`);
+  }
+
+  function renderDots() {
+    const g = $('#dots');
+    g.innerHTML = '';
+    const now = Date.now(), limit = now + 12 * HOUR;
+    for (const t of inArea()) {
+      if (t.status === 'submitted') continue;
+      const d = parseDue(t.due), ms = d.getTime();
+      if (ms <= now || ms > limit) continue;
+      const ang = ((d.getHours() % 12) + d.getMinutes() / 60) / 12 * 2 * Math.PI;
+      const c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', (100 + 77 * Math.sin(ang)).toFixed(2));
+      c.setAttribute('cy', (100 - 77 * Math.cos(ang)).toFixed(2));
+      c.setAttribute('r', t.priority === 'high' ? 5.6 : 4.6);
+      c.setAttribute('class', `dot area-${t.area}`);
+      const title = document.createElementNS(NS, 'title');
+      title.textContent = `${t.title}, ${fmtTime.format(d)}`;
+      c.append(title);
+      g.append(c);
+    }
+  }
+
+  function renderStorageNote() {
+    $('.foot').classList.toggle('warn', !storageOK);
+    $('#storageNote').textContent = storageOK
+      ? 'Tasks are saved in this browser on this device. Use Backup tasks to move them to another device.'
+      : 'This browser is blocking storage, so changes will be lost when you close the page. Use Backup tasks to keep a copy.';
+  }
+
+  /* Update countdowns without rebuilding the board (keeps drags and open menus intact) */
+  function refreshTimes() {
+    const now = new Date();
+    renderHeader();
+    renderDots();
+    document.querySelectorAll('.card').forEach(el => {
+      const t = tasks.find(x => x.id === el.dataset.id);
+      if (!t) return;
+      const tm = timing(t, now);
+      const left = el.querySelector('[data-left]');
+      left.textContent = tm.text;
+      left.className = 'left ' + tm.cls;
+      el.querySelector('.when').textContent = dueLabel(parseDue(t.due), now);
+    });
+  }
+
+  /* ---------- Clock ---------- */
+  function buildClock() {
+    const ticks = $('#ticks'), nums = $('#nums');
+    for (let i = 0; i < 60; i++) {
+      const a = i * 6 * Math.PI / 180, hr = i % 5 === 0, r1 = hr ? 83 : 88, r2 = 92;
+      const l = document.createElementNS(NS, 'line');
+      l.setAttribute('x1', (100 + r1 * Math.sin(a)).toFixed(2));
+      l.setAttribute('y1', (100 - r1 * Math.cos(a)).toFixed(2));
+      l.setAttribute('x2', (100 + r2 * Math.sin(a)).toFixed(2));
+      l.setAttribute('y2', (100 - r2 * Math.cos(a)).toFixed(2));
+      l.setAttribute('class', 'tick' + (hr ? ' hr' : ''));
+      ticks.append(l);
+    }
+    for (let h = 1; h <= 12; h++) {
+      const a = h * 30 * Math.PI / 180;
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', (100 + 64 * Math.sin(a)).toFixed(2));
+      t.setAttribute('y', (100 - 64 * Math.cos(a)).toFixed(2));
+      t.setAttribute('class', 'num');
+      t.textContent = h;
+      nums.append(t);
+    }
+  }
+  const hourHand = $('#hourHand'), minHand = $('#minHand'), secHand = $('#secHand');
+  function tick() {
+    const now = new Date();
+    const s = now.getSeconds(), m = now.getMinutes(), h = now.getHours() % 12;
+    secHand.setAttribute('transform', `rotate(${s * 6} 100 100)`);
+    minHand.setAttribute('transform', `rotate(${m * 6 + s * 0.1} 100 100)`);
+    hourHand.setAttribute('transform', `rotate(${h * 30 + m * 0.5 + s / 120} 100 100)`);
+    if (m !== lastMinute) {
+      lastMinute = m;
+      $('#dateText').textContent = `${fmtWk.format(now)} ${now.getDate()}`;
+      refreshTimes();
+    }
+    setTimeout(tick, 1000 - now.getMilliseconds() + 10);
+  }
+
+  /* ---------- Actions ---------- */
+  function setStatus(id, status) {
+    const t = tasks.find(x => x.id === id);
+    if (!t || t.status === status) return;
+    t.status = status;
+    t.updated = new Date().toISOString();
+    save();
+    renderAll();
+    toast(`Moved to ${statusName(status)}`);
+  }
+  function removeTask(id) {
+    undoState = snapshot();
+    tasks = tasks.filter(t => t.id !== id);
+    save();
+    renderAll();
+    toast('Task deleted', true);
+  }
+  function clearSubmitted() {
+    const ids = new Set(inArea().filter(t => t.status === 'submitted').map(t => t.id));
+    if (!ids.size) return;
+    undoState = snapshot();
+    tasks = tasks.filter(t => !ids.has(t.id));
+    save();
+    renderAll();
+    toast(`Cleared ${plural(ids.size, 'submitted task')}`, true);
+  }
+
+  function toast(msg, withUndo) {
+    const el = $('#toast');
+    el.textContent = '';
+    const s = document.createElement('span');
+    s.textContent = msg;
+    el.append(s);
+    if (withUndo) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'link'; b.textContent = 'Undo';
+      b.addEventListener('click', () => {
+        if (!undoState) return;
+        tasks = undoState; undoState = null;
+        save(); renderAll();
+        toast('Restored');
+      });
+      el.append(b);
+    }
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), withUndo ? 6000 : 2400);
+  }
+
+  /* ---------- Editor ---------- */
+  for (const a of AREAS) field('area').add(new Option(a.name, a.id));
+  for (const s of STATUSES) field('status').add(new Option(s.name, s.id));
+
+  function openEditor(id) {
+    const t = id ? tasks.find(x => x.id === id) : null;
+    editingId = t ? t.id : null;
+    form.reset();
+    $('#editorTitle').textContent = t ? 'Edit task' : 'New task';
+    $('#saveBtn').textContent = t ? 'Save changes' : 'Add task';
+    $('#deleteBtn').hidden = !t;
+    if (t) {
+      field('taskTitle').value = t.title;
+      field('area').value = t.area;
+      field('status').value = t.status;
+      field('due').value = t.due;
+      field('priority').value = t.priority;
+      field('notes').value = t.notes;
+    } else {
+      const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(17, 0, 0, 0);
+      field('area').value = filterArea !== 'all' ? filterArea : AREAS[0].id;
+      field('status').value = STATUSES[0].id;
+      field('due').value = toLocalInput(d);
+      field('priority').value = 'normal';
+    }
+    editor.showModal();
+    field('taskTitle').focus();
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const title = field('taskTitle').value.trim();
+    const due = field('due').value;
+    if (!title) { field('taskTitle').focus(); toast('Give the task a name'); return; }
+    if (!parseDue(due)) { field('due').focus(); toast('Pick a due date and time'); return; }
+    const data = {
+      title,
+      area: field('area').value,
+      status: field('status').value,
+      due,
+      priority: field('priority').value || 'normal',
+      notes: field('notes').value.trim()
+    };
+    if (editingId) {
+      const t = tasks.find(x => x.id === editingId);
+      if (t) Object.assign(t, data, { updated: new Date().toISOString() });
+      toast('Changes saved');
+    } else {
+      tasks.push(clean({ ...data, id: uid(), created: new Date().toISOString() }));
+      toast('Task added');
+    }
+    save();
+    editor.close();
+    renderAll();
+  });
+  $('#cancelBtn').addEventListener('click', () => editor.close());
+  $('#deleteBtn').addEventListener('click', () => {
+    if (!editingId) return;
+    const id = editingId;
+    editor.close();
+    removeTask(id);
+  });
+  editor.addEventListener('click', e => { if (e.target === editor) editor.close(); });
+
+  /* ---------- Toolbar, backup, shortcuts ---------- */
+  $('#newTask').addEventListener('click', () => openEditor());
+  $('#search').addEventListener('input', e => { query = e.target.value; renderBoard(); });
+
+  $('#exportBtn').addEventListener('click', () => {
+    const data = { app: 'deadline-board', version: 1, exported: new Date().toISOString(), tasks };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `deadline-board-backup-${toLocalInput(new Date()).slice(0, 10)}.json`;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast(`Backup saved with ${plural(tasks.length, 'task')}`);
+  });
+  $('#clearAllBtn').addEventListener('click', () => {
+    if (!tasks.length) { toast('There are no tasks to delete'); return; }
+    const n = tasks.length;
+    undoState = snapshot();
+    tasks = [];
+    save();
+    renderAll();
+    toast(`Deleted ${plural(n, 'task')}`, true);
+  });
+  $('#importBtn').addEventListener('click', () => $('#importFile').click());
+  $('#importFile').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      const list = Array.isArray(data) ? data : Array.isArray(data && data.tasks) ? data.tasks : null;
+      if (!list) throw new Error('Not a backup');
+      const seen = new Set();
+      const cleaned = list.map(clean).filter(Boolean).map(t => {
+        if (seen.has(t.id)) t.id = uid();
+        seen.add(t.id);
+        return t;
+      });
+      undoState = snapshot();
+      tasks = cleaned;
+      save();
+      renderAll();
+      toast(`Restored ${plural(cleaned.length, 'task')} from backup`, true);
+    } catch (err) {
+      toast('That file is not a Deadline Board backup. Choose a .json file made with Backup tasks.');
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (editor.open || e.metaKey || e.ctrlKey || e.altKey) return;
+    const tag = document.activeElement ? document.activeElement.tagName : '';
+    if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+    if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openEditor(); }
+    if (e.key === '/') { e.preventDefault(); $('#search').focus(); }
+  });
+
+  /* Keep several open tabs in sync */
+  window.addEventListener('storage', e => {
+    if (e.key !== KEY) return;
+    tasks = load() || [];
+    renderAll();
+  });
+
+  /* ---------- Start ---------- */
+  buildClock();
+  const stored = load();
+  if (stored === null) { tasks = seed(); save(); } else { tasks = stored; }
+  renderAll();
+  tick();
+})();
+</script>
+</body>
+</html>
