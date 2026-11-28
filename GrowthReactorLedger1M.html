@@ -11,7 +11,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Oxanium:wght@500;700;800&display=swap">
 <style>
-/* Layout: HUD console. Header strip (name · live New York clock) → status chips + Day/Night switch → spreadsheet → hero row: 24-hour reactor dial | today's ledger + goal → trajectory chart → day map | parameters.
+/* Layout: HUD console with a side rail. Side: analog + digital New York clock with seconds and a shift countdown (sticky on wide screens, a card above the page on narrow ones).
+   Main: header → status chips + Day/Night switch → spreadsheet → hero row: 24-hour clock with the day's work-shift arc | shift ledger + goal → trajectory chart → day map | parameters.
    Night is the original dark console; Day is a daylight instrument panel. Follows the device until a mode is picked. */
 :root{
   --void:#05070e;
@@ -248,6 +249,46 @@ h2::before{content:"";width:6px;height:6px;background:var(--ion);box-shadow:0 0 
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ion);outline-offset:2px}
 /* ---------- spreadsheet ---------- */
 .wrap{grid-template-columns:minmax(0,1fr)}
+/* ---------- side clock: analog + digital, New York time ---------- */
+.main{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);min-width:0}
+.side{min-width:0}
+.side-card{display:grid;gap:10px;justify-items:center;text-align:center}
+.side .clock-label{justify-content:center}
+.analog{display:block;width:100%;max-width:212px;aspect-ratio:1;height:auto}
+.a-face{fill:color-mix(in srgb,var(--void) 65%,var(--hull));stroke:var(--line);stroke-width:1.5}
+.a-tick{stroke:var(--faint);stroke-width:1}
+.a-tick.h{stroke:var(--dim);stroke-width:2.6}
+.a-num{fill:var(--dim);font-family:var(--f-display);font-size:13px;font-weight:700;text-anchor:middle;dominant-baseline:central}
+.a-num.q{fill:var(--ink)}
+.a-ap{fill:var(--faint);font-family:var(--f-data);font-size:10px;letter-spacing:.2em;text-anchor:middle}
+.a-hour{stroke:var(--ink);stroke-width:5.5;stroke-linecap:round}
+.a-min{stroke:var(--ink);stroke-width:3.2;stroke-linecap:round}
+.a-sec{stroke:var(--done);stroke-width:1.5;stroke-linecap:round}
+.a-sec-dot{fill:var(--done)}
+.a-hub{fill:var(--void)}
+.a-shift{fill:none;stroke:var(--ion);stroke-width:4;stroke-linecap:round;opacity:.9}
+.a-shift.wait{stroke-dasharray:3 6;opacity:.75}
+.side .clock-time{font-size:clamp(26px,2.3vw,32px)}
+.clock-24{font-family:var(--f-data);font-size:12px;color:var(--faint);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.side-shift{width:100%;display:grid;gap:3px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--ion) 40%,var(--line));background:color-mix(in srgb,var(--ion) 6%,var(--void))}
+.side-shift b{font-family:var(--f-data);font-size:24px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums;color:var(--ion)}
+.side-shift small{color:var(--dim);font-size:12px;text-wrap:balance}
+.side-shift[data-phase="live"]{border-color:color-mix(in srgb,var(--left) 50%,var(--line));background:color-mix(in srgb,var(--left) 8%,var(--void))}
+.side-shift[data-phase="live"] b{color:var(--left)}
+.side-shift[data-phase="done"] b{color:var(--gold)}
+.side-bal{width:100%;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 8px;border-top:1px dashed var(--line);padding-top:10px}
+.side-bal b{font-family:var(--f-data);font-size:15px;font-variant-numeric:tabular-nums}
+@media (min-width:1180px){
+  .wrap{max-width:1560px;grid-template-columns:minmax(0,1fr) 252px;align-items:start}
+  .main{grid-column:1;grid-row:1}
+  .side{grid-column:2;grid-row:1;position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}
+}
+@media (max-width:1179px){
+  .side-card{grid-template-columns:minmax(92px,150px) minmax(0,1fr);justify-items:stretch;text-align:left;align-items:center;column-gap:16px;row-gap:6px}
+  .side-card > *{grid-column:2}
+  .side-card > .analog{grid-column:1;grid-row:1 / span 6;align-self:center}
+  .side .clock-label{justify-content:flex-start}
+}
 #sheet{scroll-margin-top:16px}
 .chip.link{color:var(--ink);text-decoration:none;border-color:color-mix(in srgb,var(--ion) 45%,var(--line))}
 .chip.link:hover{background:color-mix(in srgb,var(--ion) 12%,var(--hull))}
@@ -298,12 +339,74 @@ table.grid{border-collapse:separate;border-spacing:0;font-family:var(--f-data);f
 .grid tr.dayhead span{position:sticky;left:10px}
 .grid .pill{font-size:9px;padding:2px 6px}
 .star{color:var(--gold)}
+/* ---------- work shift ---------- */
+.sw-off{background:color-mix(in srgb,var(--line) 32%,transparent);outline:1px solid var(--line);outline-offset:-1px}
+.seg.off{fill:color-mix(in srgb,var(--line) 28%,transparent);cursor:default;animation:none}
+.tick.on{stroke:var(--ion)}
+.hlabel.on{fill:var(--ion);font-weight:700}
+.shift-arc{fill:none;stroke:var(--ion);stroke-width:2.4;stroke-linecap:round;opacity:.85}
+.payout-dot{fill:var(--gold);filter:drop-shadow(0 0 5px var(--gold))}
+.pill.next{color:var(--ion)}
+.grid tr.r-next td{background:color-mix(in srgb,var(--ion) 9%,var(--void))}
+.day.next{box-shadow:0 0 0 1px var(--ion),0 0 12px color-mix(in srgb,var(--ion) 45%,transparent)}
+.split{margin:0 0 12px;padding:10px 12px;border:1px dashed color-mix(in srgb,var(--ion) 45%,var(--line));font-family:var(--f-data);font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere}
+.split b{color:var(--ion);font-weight:700}
+.split span{color:var(--dim)}
+/* ---------- rest hours & per-day start times ---------- */
+.grid td.c-rest{background:var(--void);color:color-mix(in srgb,var(--faint) 75%,var(--void))}
+.grid tr.r-rest td{background:var(--void);color:var(--faint)}
+.grid td.pay{box-shadow:inset 0 -3px 0 var(--gold)}
+.grid td.c-cur.pay{box-shadow:inset 0 0 0 1px var(--left),inset 0 -3px 0 var(--gold)}
+.grid td.stc{text-align:left;padding:4px 8px}
+select.st{background:var(--void);color:var(--ink);border:1px solid var(--line);font-family:var(--f-data);font-size:12px;padding:4px 6px;border-radius:0;max-width:100%;cursor:pointer}
+select.st.custom{border-color:var(--ion);color:var(--ion)}
+select.st:focus-visible{outline:2px solid var(--ion);outline-offset:1px}
+.push{display:block;color:var(--gold);font-size:10px;margin-top:2px;white-space:nowrap;font-family:var(--f-data);letter-spacing:0;text-transform:none}
+.startpick{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 12px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--ion) 40%,var(--line));background:color-mix(in srgb,var(--ion) 6%,var(--void));font-family:var(--f-display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.startpick select.st{font-size:14px;padding:6px 8px}
+.startpick .push{display:inline;font-size:11px}
+.cust{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:8px 0 0;color:var(--dim);font-size:12px}
+.sync{margin:8px 0 0;font-size:12px;color:var(--faint)}
+.sync[data-s="saved"]{color:var(--left)}
+.sync[data-s="error"]{color:var(--done)}
+/* keep the Start picker in view while the 24 hour columns scroll (wide screens only) */
+@media (min-width:700px){
+  .grid .stc{position:sticky;left:158px;z-index:2;min-width:112px;box-shadow:inset -1px 0 0 var(--ion)}
+  .grid td.stc{background:var(--hull-hi)}
+  .grid thead .stc{z-index:4}
+  .grid .sc2{box-shadow:none}
+}
 footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin:0 auto}
 @media (prefers-reduced-motion:reduce){.orbit,.pulse,.seg-in{animation:none}.seg,.gauge-fill{transition:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <aside class="side" aria-label="New York time">
+    <div class="panel side-card">
+      <div class="clock-label"><span class="dot pulse" aria-hidden="true"></span>New York · <span id="tz">EST</span></div>
+      <svg class="analog" id="analog" viewBox="0 0 200 200" role="img" aria-label="Analog clock showing New York time">
+        <circle class="a-face" cx="100" cy="100" r="94"/>
+        <g id="aTicks"></g>
+        <path class="a-shift" id="aShift" d=""/>
+        <text class="a-ap" id="aAp" x="100" y="136">PM</text>
+        <g id="aHour"><line class="a-hour" x1="100" y1="112" x2="100" y2="54"/></g>
+        <g id="aMin"><line class="a-min" x1="100" y1="116" x2="100" y2="26"/></g>
+        <g id="aSec"><line class="a-sec" x1="100" y1="124" x2="100" y2="16"/><circle class="a-sec-dot" cx="100" cy="100" r="4"/></g>
+        <circle class="a-hub" cx="100" cy="100" r="2"/>
+      </svg>
+      <div class="clock-time" id="clock">4:00:00<small>PM</small></div>
+      <div class="clock-24" id="clock24">16:00:00 · 24-hour</div>
+      <div class="clock-date" id="clockDate">Saturday, November 28, 2026</div>
+      <div class="side-shift" id="sideShift" data-phase="wait">
+        <span class="lbl" id="sideK">Next shift starts in</span>
+        <b id="sideCount">0:00:00</b>
+        <small id="sideSub">Day 1 · Sat, Nov 28 · 4 PM – 12 AM</small>
+      </div>
+      <div class="side-bal"><span class="lbl">Balance now</span><b id="sideBal">$1,000.00</b></div>
+    </div>
+  </aside>
+  <main class="main">
   <header class="top">
     <div class="brand">
       <svg class="mark" viewBox="0 0 46 46" aria-hidden="true">
@@ -314,21 +417,17 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       </svg>
       <div>
         <h1>Growth<span>//</span>Reactor</h1>
-        <p class="sub" id="sub">Projection · $1,000 → $1,000,000 · 0.95% per hour · from Nov 28, 12:00 PM · reinvest 90% / withdraw 10%</p>
+        <p class="sub" id="sub">Projection · $1,000 → $1,000,000 · 25.47% a day ÷ 8 hrs = 3.184% an hour · start time picked per day (default 4 PM) · from Nov 28 · reinvest 90% / withdraw 10%</p>
       </div>
-    </div>
-    <div class="clock" aria-live="off">
-      <div class="clock-label"><span class="dot pulse" aria-hidden="true"></span>New York · <span id="tz">EST</span></div>
-      <div class="clock-time" id="clock">3:00:00<small>PM</small></div>
-      <div class="clock-date" id="clockDate">Saturday, November 21, 2026</div>
     </div>
   </header>
 
   <div class="chips">
-    <span class="chip state" id="chState" data-phase="live"><span class="dot pulse" aria-hidden="true"></span><span id="chStateTx">Compounding</span></span>
+    <span class="chip state" id="chState" data-phase="pending"><span class="dot pulse" aria-hidden="true"></span><span id="chStateTx">Starts Sat, Nov 28 · 4:00 PM</span></span>
     <span class="chip"><em>Day</em><b id="chDay">01 / 34</b></span>
-    <span class="chip"><em>Hour</em><b id="chHr">16 / 24</b></span>
-    <span class="chip"><em>Rate</em><b id="chRate">0.95%/hr · 25.47%/day</b></span>
+    <span class="chip"><em>Shift</em><b id="chShift">4 PM – 12 AM</b></span>
+    <span class="chip"><em>Hour</em><b id="chHr">— / 8</b></span>
+    <span class="chip"><em>Target</em><b id="chRate">25.47%/day ÷ 8 = 3.184%/hr</b></span>
     <a class="chip link" href="#reactor"><em>Jump to</em><b>Live dial ↓</b></a>
     <div class="seg-toggle mode" role="group" aria-label="Display mode">
       <button type="button" id="mDay" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.2v1.9M8 12.9v1.9M1.2 8h1.9M12.9 8h1.9M3.2 3.2l1.3 1.3M11.5 11.5l1.3 1.3M3.2 12.8l1.3-1.3M11.5 4.5l1.3-1.3"/></svg>Day</button>
@@ -349,8 +448,9 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       </div>
     </div>
 
+    <p class="split" id="splitLine"><b>$1,000.00 × 25.47% = $254.70</b> target for day 1 <span>÷ 8 hours =</span> <b>$31.84 an hour</b></p>
     <div role="tabpanel" id="pnDays" aria-labelledby="tabDays">
-      <p class="note top">Balance at the end of each hour, New York time. Red = completed · Green = remaining · Gold ★ = goal hour. Tap a day to open its 24 hours.</p>
+      <p class="note top" id="daysNote">All 24 hours of each date, New York time. Pick when each day's 8-hour shift starts in the Start column. Work hours add that day's target ÷ 8; rest hours hold the balance. Red = completed · Green = remaining · Gold line = payout · Gold ★ = goal hour. Tap a row to open its hours.</p>
       <div class="tbl-wrap" id="wrapDays"><table class="grid" id="tblDays"></table></div>
     </div>
 
@@ -372,7 +472,7 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
 
     <div role="tabpanel" id="pnPlan" aria-labelledby="tabPlan" hidden>
       <div class="hsum"><div class="kvs" id="planSum"></div></div>
-      <p class="note top">Each night at 12:00 AM New York time the withdraw share of that day's profit is paid out. The rest stays in and keeps compounding. Tap a day to see its hours.</p>
+      <p class="note top" id="planNote">Each day's shift ends 8 hours after it starts, and the withdraw share of that shift's profit is paid out then. The rest stays in and sets the next day's target. Tap a day to see its hours.</p>
       <div class="tbl-wrap" id="wrapPlan"><table class="grid" id="tblPlan"></table></div>
     </div>
   </section>
@@ -380,16 +480,16 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
   <section class="hero" id="reactor">
     <div class="panel">
       <div class="ph">
-        <h2>Today's 24-hour cycle</h2>
-        <span class="legend"><span><i class="sw-done"></i>Completed</span><span><i class="sw-left"></i>Remaining</span><span><i class="sw-pre"></i>Before start</span></span>
+        <h2 id="dialTitle">Day 1 shift · 4 PM – 12 AM</h2>
+        <span class="legend"><span><i class="sw-done"></i>Completed</span><span><i class="sw-left"></i>Remaining</span><span><i class="sw-off"></i>Rest hours</span><span><i class="sw-gold"></i>Payout</span></span>
       </div>
       <div class="dial">
-        <svg id="dial" viewBox="0 0 400 400" role="group" aria-label="24 hours of today, midnight at the top"></svg>
+        <svg id="dial" viewBox="0 0 400 400" role="group" aria-label="24-hour clock, midnight at the top, with the work shift marked"></svg>
         <div class="core">
           <div class="k">Projected balance</div>
-          <div class="big"><span id="liveMain">$2,175</span><span class="c" id="liveCents">.40</span><span class="m" id="liveMicro">00</span></div>
-          <div class="earned" id="earned">+$175.40 today</div>
-          <div class="next" id="nextLine">Hr 16 of 24 · next step in 60:00</div>
+          <div class="big"><span id="liveMain">$1,000</span><span class="c" id="liveCents">.00</span><span class="m" id="liveMicro">00</span></div>
+          <div class="earned" id="earned">+$0.00 this shift</div>
+          <div class="next" id="nextLine">Shift starts in 5h 00m</div>
         </div>
       </div>
       <div class="readout" id="readout" aria-live="polite"></div>
@@ -397,15 +497,17 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
 
     <div class="stack">
       <div class="panel ledger">
-        <div class="ph"><h2>Today's ledger</h2><span class="legend" id="ledgerDate">Sat, Nov 28</span></div>
+        <div class="ph"><h2>Shift ledger</h2><span class="legend" id="ledgerDate">Sat, Nov 28 · 4 PM – 12 AM</span></div>
+        <label class="startpick" for="lgStart"><span id="lgStartK">Day 1 starts at</span><select id="lgStart" class="st" data-start="2026-11-28"></select><span class="push" id="lgPush" hidden></span></label>
         <dl>
-          <dt>Opening <small id="lgOpenAt">12:00 PM</small></dt><dd id="lgOpen">$1,000.00</dd>
-          <dt id="lgStepLabel">At 3:00 PM <small>last full hour</small></dt><dd id="lgStep">$1,000.00</dd>
-          <dt>Profit today <small>full day</small></dt><dd id="lgProfit">$120.15</dd>
-          <dt id="lgReLabel">Reinvest 90%</dt><dd id="lgRe">$108.13</dd>
-          <dt id="lgWdLabel">Withdraw 10% <small>paid at midnight</small></dt><dd class="wd" id="lgWd">$12.01</dd>
-          <dt class="em">Close at midnight</dt><dd class="em" id="lgClose">$1,108.13</dd>
-          <dt>Next payout in</dt><dd id="lgNext">9h 00m</dd>
+          <dt>Opening <small id="lgOpenAt">4:00 PM</small></dt><dd id="lgOpen">$1,000.00</dd>
+          <dt id="lgStepLabel">At start <small>shift not started</small></dt><dd id="lgStep">$1,000.00</dd>
+          <dt id="lgProfitLabel">Target 25.47% <small>whole shift</small></dt><dd id="lgProfit">$254.70</dd>
+          <dt id="lgPerLabel">Per hour <small>÷ 8 hours</small></dt><dd id="lgPer">$31.84</dd>
+          <dt id="lgReLabel">Reinvest 90%</dt><dd id="lgRe">$229.23</dd>
+          <dt id="lgWdLabel">Withdraw 10% <small>paid at 12:00 AM</small></dt><dd class="wd" id="lgWd">$25.47</dd>
+          <dt class="em" id="lgCloseLabel">Close at 12:00 AM</dt><dd class="em" id="lgClose">$1,229.23</dd>
+          <dt>Next payout in</dt><dd id="lgNext">13h 00m</dd>
           <dt>Withdrawn so far <small>finished days</small></dt><dd id="lgTotal">$0.00</dd>
         </dl>
       </div>
@@ -438,7 +540,7 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       </div>
     </div>
     <div class="chart" id="chart"></div>
-    <p class="note">Balance at each midnight close, after the withdrawal. Solid line: days done. Dashed line: days ahead.</p>
+    <p class="note">Balance through each shift: it climbs by the hourly amount while working, dips slightly at the payout, then holds flat until the next shift. Solid line: done. Dashed line: ahead.</p>
   </section>
 
   <section class="lower">
@@ -456,19 +558,25 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       <div class="fields">
         <label for="pBal">Starting balance ($)<input id="pBal" type="number" min="1" step="any" inputmode="decimal"></label>
         <label for="pGoal">Goal ($)<input id="pGoal" type="number" min="1" step="any" inputmode="decimal"></label>
-        <label for="pRate">Growth per hour (%)<input id="pRate" type="number" min="0" step="any" inputmode="decimal"></label>
+        <label for="pDaily">Daily target (%)<input id="pDaily" type="number" min="0" step="any" inputmode="decimal"></label>
         <label for="pWd">Withdraw share (%)<input id="pWd" type="number" min="0" max="100" step="any" inputmode="decimal"></label>
-        <label for="pStart">Start date<input id="pStart" type="date"></label>
-        <label for="pHr">Start time<select id="pHr"></select></label>
-        <label for="pEnd">Ends 12:00 AM on<input id="pEnd" type="date"></label>
+        <label for="pDef">Default start time<select id="pDef"></select></label>
+        <label for="pLen">Hours per shift<input id="pLen" type="number" min="1" max="24" step="1" inputmode="numeric"></label>
+        <label for="pStart">First shift on<input id="pStart" type="date"></label>
+        <label for="pEnd">Last shift on<input id="pEnd" type="date"></label>
       </div>
       <p class="err" id="perr" role="alert"></p>
-      <p class="fine">Changes apply instantly and are saved in this browser only. Day 1 begins at the start time; after that, days run midnight to midnight, New York time.</p>
+      <p class="fine" id="pDerived">25.47% ÷ 8 hours = 3.184% of the day's opening balance each hour.</p>
+      <div class="cust"><span id="custTx">Every day starts at the default time. Pick a different time for any day in the spreadsheet, the shift ledger or the day map.</span><button type="button" class="ghost" id="clearStarts" hidden>Use default for all days</button></div>
+      <p class="fine">Changes apply instantly. Each day's target is a share of that day's opening balance, split evenly across the shift's hours. The payout happens when the shift ends. In the rest hours the balance holds still. If a day starts before the previous shift has ended, it starts when that shift ends. Times are New York.</p>
+      <p class="sync" id="sync" data-s="local">Saved in this browser.</p>
     </form>
   </section>
 
   <footer>Projection only: every figure is calculated from the parameters on this page, not read from any account. Times are New York (America/New_York), worked out automatically from your device's clock wherever you are.</footer>
+  </main>
 </div>
+
 
 <script>
 (() => {
@@ -476,15 +584,112 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
 const $ = (id) => document.getElementById(id);
 const SVGNS = "http://www.w3.org/2000/svg";
 const HOUR = 36e5, DAY = 864e5;
-const DEF = { bal: 1000, rate: 0.95, wd: 10, start: "2026-11-28", hr: 12, end: "2027-01-01", goal: 1000000 };
-const KEY = "growth-reactor-ledger:params:v14";
+// Each day has one work shift. Its start time is picked per day (default 4 PM New York); the daily target
+// is split evenly across the shift's hours, and the rest of the day's hours hold the balance still.
+const DEF = { bal: 1000, goal: 1000000, daily: 25.47, wd: 10, defStart: 16, len: 8, start: "2026-11-28", end: "2026-12-31", starts: {} };
+const KEY = "growth-reactor-ledger:params:v17";
+const OLD16 = "growth-reactor-ledger:params:v16", OLD15 = "growth-reactor-ledger:params:v15", OLD14 = "growth-reactor-ledger:params:v14";
 
-let P = { ...DEF };
+function parseDate(s) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ""); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : NaN; }
+const iso = (ms) => new Date(ms).toISOString().slice(0, 10);
+
+// keep only well-formed settings (used for browser storage and the account copy alike)
+function clean(src) {
+  const o = { ...DEF, starts: {} };
+  if (!src || typeof src !== "object") return o;
+  const num = (v) => (typeof v === "number" ? v : parseFloat(v));
+  if (num(src.bal) > 0) o.bal = num(src.bal);
+  if (num(src.goal) > 0) o.goal = num(src.goal);
+  if (num(src.daily) > 0 && num(src.daily) <= 1000) o.daily = num(src.daily);
+  if (num(src.wd) >= 0 && num(src.wd) <= 100) o.wd = num(src.wd);
+  const ds = Math.floor(num(src.defStart)); if (ds >= 0 && ds <= 23) o.defStart = ds;
+  const ln = Math.floor(num(src.len)); if (ln >= 1 && ln <= 24) o.len = ln;
+  const s = parseDate(src.start), e = parseDate(src.end);
+  if (!isNaN(s) && !isNaN(e) && e >= s && (e - s) / DAY <= 3650) { o.start = src.start; o.end = src.end; }
+  if (src.starts && typeof src.starts === "object") {
+    for (const k in src.starts) {
+      const h = Math.floor(num(src.starts[k]));
+      if (/^\d{4}-\d{2}-\d{2}$/.test(k) && h >= 0 && h <= 23) o.starts[k] = h;
+    }
+  }
+  return o;
+}
+
+let P = clean(null);
 try {
   const raw = localStorage.getItem(KEY);
-  if (raw) { const s = JSON.parse(raw); if (s && typeof s === "object") P = { ...DEF, ...s }; }
+  const v16 = raw ? null : JSON.parse(localStorage.getItem(OLD16) || "null");
+  if (raw) P = clean(JSON.parse(raw));
+  else if (v16 && typeof v16 === "object") P = clean({ ...v16, defStart: 16 });   // keep settings, move the default to 4 PM
+  else {
+    const v15 = JSON.parse(localStorage.getItem(OLD15) || "null");
+    if (v15 && typeof v15 === "object") P = clean({ ...v15, defStart: 16 });
+    else {
+      const old = JSON.parse(localStorage.getItem(OLD14) || "null");
+      if (old && typeof old === "object") {
+        const m = { bal: old.bal, goal: old.goal, wd: old.wd };
+        if (old.rate > 0) m.daily = Math.round((Math.pow(1 + old.rate / 100, 24) - 1) * 10000) / 100;
+        const os = parseDate(old.start), oe = parseDate(old.end);
+        if (!isNaN(os) && !isNaN(oe) && oe - DAY >= os) { m.start = old.start; m.end = iso(oe - DAY); }
+        P = clean(m);
+      }
+    }
+  }
 } catch (e) {}
-function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
+
+/* ---------- saving: this browser always, the viewer's account when available ---------- */
+let cloud = null, cloudTimer = 0, cloudBusy = false, cloudAgain = false, editedEarly = false;
+const SYNC_TX = {
+  local: "Saved in this browser.",
+  ready: "Your changes save to your account, so they follow you to any device where you're signed in.",
+  saving: "Saving to your account…",
+  saved: "Saved to your account. Open this page on any device where you're signed in to see the same plan.",
+  error: "Couldn't save to your account just now. Your changes are kept in this browser."
+};
+function setSync(s) { const n = $("sync"); n.dataset.s = s; n.textContent = SYNC_TX[s]; }
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {}
+  editedEarly = true;
+  if (cloud) { clearTimeout(cloudTimer); cloudTimer = setTimeout(pushCloud, 700); }
+}
+async function pushCloud() {
+  if (!cloud) return;
+  if (cloudBusy) { cloudAgain = true; return; }
+  cloudBusy = true; setSync("saving");
+  try {
+    await cloud.set({ params: JSON.parse(JSON.stringify(P)), v: 2, savedAt: Date.now() });
+    setSync("saved");
+  } catch (e) {
+    const code = e && e.code;
+    if (code === "invalid_argument" || code === "revoked" || code === "not_granted") { cloud = null; setSync("local"); }
+    else setSync("error");
+  }
+  cloudBusy = false;
+  if (cloudAgain) { cloudAgain = false; pushCloud(); }
+}
+async function initCloud() {
+  try {
+    const C = window.claude;
+    if (!C || typeof C.use !== "function") return;
+    editedEarly = false;
+    const [db, user] = await Promise.all([C.use("db"), C.use("user")]);
+    const uid = user ? await user.id() : null;
+    if (!db || !uid) return;
+    const ref = db.doc("data/users/" + uid + "/plan");
+    let timer;
+    const snap = await Promise.race([ref.get(), new Promise((_, rej) => { timer = setTimeout(() => rej({ code: "timeout" }), 10000); })]);
+    clearTimeout(timer);
+    cloud = ref;
+    const body = snap.exists ? snap.data() : null;
+    if (editedEarly) { pushCloud(); return; }          // the viewer already changed something here: keep it
+    if (body && body.params && typeof body.params === "object") {
+      P = clean(body.v === 2 ? body.params : { ...body.params, defStart: 16 });
+      try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {}
+      fillForm(); readForm(); rebuild(true);
+      setSync("saved");
+    } else setSync("ready");
+  } catch (e) { cloud = null; setSync("local"); }
+}
 
 /* ---------- day / night ---------- */
 const MODE_KEY = "growth-reactor-ledger:mode";
@@ -528,9 +733,15 @@ const fLong = U({ weekday: "long", month: "long", day: "numeric", year: "numeric
 const fMD = U({ month: "short", day: "numeric" });
 const fMon = U({ month: "short" });
 const fT = U({ hour: "numeric", minute: "2-digit" });
+const fH = U({ hour: "numeric" });
 const fClk = U({ hour: "numeric", minute: "2-digit", second: "2-digit" });
 const pad = (n) => String(n).padStart(2, "0");
 const pctTx = (v) => String(Math.round(v * 10000) / 10000) + "%";
+const pct3 = (v) => String(Math.round(v * 1000) / 1000) + "%";
+const hourTx = (h) => fH.format(Date.UTC(2000, 0, 1, ((h % 24) + 24) % 24));
+const pctFmt = (v) => (v * 100 >= 10 ? (v * 100).toFixed(1) : (v * 100).toFixed(2)) + "%";
+const OPT_TX = Array.from({ length: 24 }, (_, n) => fT.format(Date.UTC(2000, 0, 1, n)));
+const optsHtml = (sel) => OPT_TX.map((t, n) => `<option value="${n}"${n === sel ? " selected" : ""}>${t}</option>`).join("");
 
 /* ---------- New York clock (works on any device time zone) ---------- */
 let nyFmt = null, tzFmt = null;
@@ -549,62 +760,112 @@ function nyNow() {
   const t = tzFmt.formatToParts(d).find((x) => x.type === "timeZoneName");
   return { ms, tz: t ? t.value : "ET" };
 }
-function parseDate(s) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ""); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : NaN; }
 
 /* ---------- model: same math as the spreadsheet ---------- */
-let M;
+// Day i: a shift on date i starting at that day's chosen hour (or when the previous shift ends, if later),
+// L hours long. Target = open × daily %, earned in L equal hourly amounts. When the shift ends, the
+// withdraw share is paid out and the rest becomes the next day's opening balance.
+let M, ver = 0;
 function build() {
-  const h = P.rate / 100, q = P.wd / 100;
-  const g = Math.pow(1 + h, 24) - 1;
+  const r = P.daily / 100, q = P.wd / 100, L = P.len;
   const s = parseDate(P.start), e = parseDate(P.end);
-  let D = Math.round((e - s) / DAY);
+  let D = Math.round((e - s) / DAY) + 1;
   if (!(D >= 1)) D = 1;
   if (D > 3660) D = 3660;
-  // Day 1 starts at the chosen hour (off0 hours are skipped); every later day runs midnight to midnight.
-  const off0 = Math.max(0, Math.min(23, Math.floor(P.hr) || 0));
   const days = [];
-  let open = P.bal;
+  let open = P.bal, prevEnd = -Infinity;
   for (let i = 0; i < D; i++) {
-    const off = i === 0 ? off0 : 0, n = 24 - off;
-    const profit = open * (Math.pow(1 + h, n) - 1), w = profit * q, r = profit - w, close = open + r;
-    days.push({ i, date: s + i * DAY, off, n, open, profit, w, r, close });
-    open = close;
+    const date = s + i * DAY, key = iso(date), custom = Object.prototype.hasOwnProperty.call(P.starts, key);
+    const want = custom ? P.starts[key] : P.defStart, tw = date + want * HOUR, t = Math.max(tw, prevEnd);
+    const profit = open * r, per = profit / L, w = profit * q, re = profit - w, close = open + re;
+    days.push({ i, date, key, want, custom, pushed: t > tw, t, e: t + L * HOUR, open, profit, per, w, r: re, close });
+    open = close; prevEnd = t + L * HOUR;
   }
   let goal = null;
   for (const d of days) {
-    if (d.open * Math.pow(1 + h, d.n) >= P.goal) {
-      let k = d.open >= P.goal ? 1 : Math.ceil(Math.log(P.goal / d.open) / Math.log(1 + h) - 1e-9);
-      k = Math.min(d.n, Math.max(1, k)) + d.off;
-      goal = { day: d.i, hr: k, at: d.date + k * HOUR };
+    if (d.open + d.profit >= P.goal) {
+      let k = d.open >= P.goal ? 1 : Math.ceil((P.goal - d.open) / d.per - 1e-9);
+      k = Math.min(L, Math.max(1, k));
+      goal = { day: d.i, hr: k, at: d.t + k * HOUR };
       break;
     }
   }
-  M = { h, q, g, s, off0, t0: s + off0 * HOUR, hours: D * 24 - off0, D, days, goal };
+  const tEnd = days[D - 1].e;
+  // calendar rows: every date that holds part of a shift (the last shift can run past midnight)
+  const R = Math.floor((tEnd - 1 - s) / DAY) + 1;
+  M = { r, q, L, s, D, R, days, goal, hours: D * L, t0: days[0].t, tEnd };
+  ver++;
+}
+const shiftTx = (d) => `${fH.format(d.t)} – ${fH.format(d.e)}`;
+function idxAt(ms) {            // last day whose shift has started by ms, or -1
+  let lo = 0, hi = M.D - 1, ans = -1;
+  while (lo <= hi) { const mid = (lo + hi) >> 1; if (M.days[mid].t <= ms) { ans = mid; lo = mid + 1; } else hi = mid - 1; }
+  return ans;
+}
+// what happens in the clock hour starting at hs
+function hourAt(hs) {
+  const i = idxAt(hs);
+  if (i < 0) return { kind: "pre", bal: P.bal };
+  const d = M.days[i];
+  if (hs < d.e) {
+    const k = Math.round((hs - d.t) / HOUR) + 1;
+    return { kind: "work", d, k, start: d.open + d.per * (k - 1), end: d.open + d.per * k };
+  }
+  return { kind: i === M.D - 1 ? "post" : "rest", d, bal: d.close };
+}
+function balAt(ms) {
+  const i = idxAt(ms);
+  if (i < 0) return P.bal;
+  const d = M.days[i];
+  return ms < d.e ? d.open + d.profit * (ms - d.t) / (M.L * HOUR) : d.close;
 }
 
+// phase: "wait" (day di's shift is up next), "live" (inside day di's shift), "done" (all shifts paid)
 function state(now) {
-  const rel = (now - M.s) / HOUR;
-  let di, hf, phase;
-  if (rel < M.off0) { di = 0; hf = M.off0; phase = "pending"; }
-  else if (rel >= M.D * 24) { di = M.D - 1; hf = 24; phase = "done"; }
-  else { di = Math.floor(rel / 24); hf = rel - di * 24; phase = "live"; }
+  let di, phase;
+  if (now < M.t0) { di = 0; phase = "wait"; }
+  else if (now >= M.tEnd) { di = M.D - 1; phase = "done"; }
+  else {
+    const i = idxAt(now);
+    if (now < M.days[i].e) { di = i; phase = "live"; } else { di = i + 1; phase = "wait"; }
+  }
   const d = M.days[di];
-  const live = d.open * Math.pow(1 + M.h, Math.max(0, hf - d.off));
-  const j = Math.min(24, Math.floor(hf));
-  const stepped = d.open * Math.pow(1 + M.h, Math.max(0, j - d.off));
+  const hf = phase === "live" ? (now - d.t) / HOUR : phase === "done" ? M.L : 0;
+  const j = Math.min(M.L, Math.floor(hf));
+  const live = phase === "done" ? d.close : d.open + d.per * hf;
+  const stepped = d.open + d.per * j;
   let withdrawn = 0;
   for (let i = 0; i < di; i++) withdrawn += M.days[i].w;
   if (phase === "done") withdrawn += d.w;
-  return { now, rel, di, hf, j, phase, d, live, stepped, withdrawn };
+  return { now, di, hf, j, phase, d, live, stepped, withdrawn };
 }
 
-/* ---------- dial ---------- */
-const CX = 200, CY = 200, RO = 160, RI = 124, GAP = 1.1;
+/* ---------- start-time pickers ---------- */
+function startSelect(d) {
+  return `<select class="st${d.custom ? " custom" : ""}" data-start="${d.key}" aria-label="Start time for day ${d.i + 1}, ${fDay.format(d.date)}">${optsHtml(d.want)}</select>` +
+    (d.pushed ? `<span class="push" title="Day ${d.i}'s shift runs until ${fT.format(d.t)}, so this day starts then.">→ starts ${fT.format(d.t)}</span>` : "");
+}
+function setStart(key, h) {
+  if (!(h >= 0 && h <= 23)) return;
+  P.starts = { ...P.starts, [key]: h };
+  save(); rebuild(true);
+}
+document.addEventListener("change", (e) => {
+  const sel = e.target && e.target.closest ? e.target.closest("select[data-start]") : null;
+  if (sel) setStart(sel.dataset.start, parseInt(sel.value, 10));
+});
+
+/* ---------- dial: 24-hour clock with the current day's shift ---------- */
+const CX = 200, CY = 200, RO = 160, RI = 124, GAP = 1.1, RT = 178;
 function polar(r, deg) { const t = (deg - 90) * Math.PI / 180; return [CX + r * Math.cos(t), CY + r * Math.sin(t)]; }
 function ring(r0, r1, a0, a1) {
   const lg = a1 - a0 > 180 ? 1 : 0, f = (n) => n.toFixed(2);
   const [x0, y0] = polar(r1, a0), [x1, y1] = polar(r1, a1), [x2, y2] = polar(r0, a1), [x3, y3] = polar(r0, a0);
   return `M${f(x0)} ${f(y0)}A${r1} ${r1} 0 ${lg} 1 ${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}A${r0} ${r0} 0 ${lg} 0 ${f(x3)} ${f(y3)}Z`;
+}
+function arc(r, a0, a1) {
+  const lg = a1 - a0 > 180 ? 1 : 0, [x0, y0] = polar(r, a0), [x1, y1] = polar(r, a1);
+  return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${lg} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
 }
 function el(tag, attrs, parent) {
   const n = document.createElementNS(SVGNS, tag);
@@ -613,80 +874,102 @@ function el(tag, attrs, parent) {
   return n;
 }
 const dial = $("dial");
-const segs = [];
-let segFill, pip;
+let segs = [], segFill, pip, dS = 20, dialFor = "";
 let selHr = null, hoverHr = null, selDay = null, lastSt = null, scale = "lin";
+const clockOf = (k) => (dS + k - 1) % 24;                                 // clock hour where shift hour k begins
+const shiftOf = (c) => { const x = (c - dS + 24) % 24; return x < M.L ? x + 1 : 0; };
 
-function buildDial() {
-  el("circle", { cx: CX, cy: CY, r: 178, class: "track" }, dial);
+function buildDial(d) {
+  dS = Math.round((((d.t % DAY) + DAY) % DAY) / HOUR) % 24;
+  dial.textContent = "";
+  segs = [];
+  el("circle", { cx: CX, cy: CY, r: RT, class: "track" }, dial);
+  if (M.L >= 24) el("circle", { cx: CX, cy: CY, r: RT, class: "shift-arc" }, dial);
+  else el("path", { d: arc(RT, dS * 15, (dS + M.L) * 15), class: "shift-arc" }, dial);
   el("circle", { cx: CX, cy: CY, r: 112, class: "orbit", "stroke-dasharray": "2 7" }, dial);
   el("circle", { cx: CX, cy: CY, r: 104, class: "track" }, dial);
-  for (let i = 0; i < 24; i++) {
-    const a = i * 15, major = i % 3 === 0;
-    const [x0, y0] = polar(major ? 165 : 168, a), [x1, y1] = polar(173, a);
-    el("line", { x1: x0.toFixed(2), y1: y0.toFixed(2), x2: x1.toFixed(2), y2: y1.toFixed(2), class: major ? "tick major" : "tick" }, dial);
-    if (major) {
-      const [lx, ly] = polar(189, a);
-      const t = el("text", { x: lx.toFixed(1), y: ly.toFixed(1), class: "hlabel" }, dial);
-      t.textContent = (i % 12 === 0 ? 12 : i % 12) + (i < 12 ? "a" : "p");
+  const endH = (dS + M.L) % 24;
+  for (let c = 0; c < 24; c++) {
+    const a = c * 15, x = (c - dS + 24) % 24, inShift = M.L >= 24 || x <= M.L;
+    const edge = c === dS || c === endH, major = c % 3 === 0;
+    const [x0, y0] = polar(major || edge ? 165 : 168, a), [x1, y1] = polar(173, a);
+    el("line", { x1: x0.toFixed(2), y1: y0.toFixed(2), x2: x1.toFixed(2), y2: y1.toFixed(2), class: "tick" + (major || edge ? " major" : "") + (inShift ? " on" : "") }, dial);
+    if (major || edge) {
+      const [lx, ly] = polar(191, a);
+      const t = el("text", { x: lx.toFixed(1), y: ly.toFixed(1), class: "hlabel" + (edge ? " on" : "") }, dial);
+      t.textContent = (c % 12 === 0 ? 12 : c % 12) + (c < 12 ? "a" : "p");
     }
   }
-  for (let i = 0; i < 24; i++) {
-    const k = i + 1;
-    const p = el("path", { d: ring(RI, RO, i * 15 + GAP / 2, k * 15 - GAP / 2), class: "seg left seg-in", tabindex: "0", role: "button", style: `--i:${i}` }, dial);
-    p.addEventListener("click", () => { selHr = k; refresh(); });
-    p.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selHr = k; refresh(); } });
-    p.addEventListener("mouseenter", () => { hoverHr = k; renderReadout(lastSt); });
-    p.addEventListener("mouseleave", () => { hoverHr = null; renderReadout(lastSt); });
-    segs.push(p);
+  for (let c = 0; c < 24; c++) {
+    const k = shiftOf(c);
+    const attrs = { d: ring(RI, RO, c * 15 + GAP / 2, (c + 1) * 15 - GAP / 2), class: k ? "seg left" : "seg off" };
+    if (k) { attrs.tabindex = "0"; attrs.role = "button"; }
+    const p = el("path", attrs, dial);
+    if (k) {
+      p.addEventListener("click", () => { selHr = k; refresh(); });
+      p.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selHr = k; refresh(); } });
+      p.addEventListener("mouseenter", () => { hoverHr = k; renderReadout(lastSt); });
+      p.addEventListener("mouseleave", () => { hoverHr = null; renderReadout(lastSt); });
+    } else {
+      const ttl = el("title", {}, p);
+      ttl.textContent = `${OPT_TX[c]} – ${OPT_TX[(c + 1) % 24]} · rest`;
+    }
+    segs.push({ p, k });
   }
   segFill = el("path", { id: "segFill", d: "" }, dial);
-  pip = el("circle", { id: "pip", r: 4.5, cx: CX, cy: CY - 178 }, dial);
+  const [dx, dy] = polar(RT, (dS + M.L) * 15);
+  el("circle", { cx: dx.toFixed(2), cy: dy.toFixed(2), r: 4, class: "payout-dot" }, dial);
+  pip = el("circle", { id: "pip", r: 4.5, cx: CX, cy: CY - RT }, dial);
+  dial.setAttribute("aria-label", `24-hour clock, midnight at the top. Day ${d.i + 1}'s shift runs ${shiftTx(d)}, New York time; the other hours are rest.`);
 }
 
 function hourStatus(st, k) {
-  if (k <= st.d.off) return "pre";
-  if (st.phase === "pending") return "left";
+  if (st.phase === "wait") return "left";
   if (st.phase === "done" || k <= st.j) return "done";
-  if (st.phase === "live" && k === st.j + 1) return "cur";
+  if (k === st.j + 1) return "cur";
   return "left";
 }
-const ST_LABEL = { pre: "Before start", done: "Completed", cur: "In progress", left: "Remaining" };
+const ST_LABEL = { done: "Completed", cur: "In progress", left: "Remaining" };
 function hourInfo(d, k) {
-  const start = d.open * Math.pow(1 + M.h, Math.max(0, k - 1 - d.off)), end = d.open * Math.pow(1 + M.h, Math.max(0, k - d.off)), earned = end - start;
-  return { k, start, end, earned, re: earned * (1 - M.q), wd: earned * M.q, from: d.date + (k - 1) * HOUR, to: d.date + k * HOUR };
+  const start = d.open + d.per * (k - 1), end = d.open + d.per * k;
+  return { k, start, end, earned: d.per, re: d.per * (1 - M.q), wd: d.per * M.q, from: d.t + (k - 1) * HOUR, to: d.t + k * HOUR };
 }
 
 function renderDial(st) {
-  for (let i = 0; i < 24; i++) {
-    const k = i + 1, s = hourStatus(st, k);
-    const cls = `seg ${s} seg-in${selHr === k ? " sel" : ""}`;
-    if (segs[i].getAttribute("class") !== cls) segs[i].setAttribute("class", cls);
+  const key = `${ver}|${st.d.t}`;
+  if (key !== dialFor) { dialFor = key; buildDial(st.d); }
+  for (const sg of segs) {
+    if (!sg.k) continue;
+    const k = sg.k, s = hourStatus(st, k);
+    const cls = `seg ${s}${selHr === k ? " sel" : ""}`;
+    if (sg.p.getAttribute("class") !== cls) sg.p.setAttribute("class", cls);
     const h = hourInfo(st.d, k);
-    segs[i].setAttribute("aria-label", `Hour ${k}, ${fT.format(h.from)} to ${fT.format(h.to)}, ${ST_LABEL[s]}`);
+    sg.p.setAttribute("aria-label", `Hour ${k} of ${M.L}, ${fT.format(h.from)} to ${fT.format(h.to)}, ${ST_LABEL[s]}`);
   }
   if (st.phase === "live") {
-    const frac = st.hf - st.j, a0 = st.j * 15 + GAP / 2;
+    const frac = st.hf - st.j, a0 = clockOf(st.j + 1) * 15 + GAP / 2;
     segFill.setAttribute("d", frac > 0.003 ? ring(RI, RO, a0, a0 + (15 - GAP) * frac) : "");
   } else segFill.setAttribute("d", "");
-  const [px, py] = polar(178, Math.min(24, st.hf) * 15);
+  const tod = (((st.now % DAY) + DAY) % DAY) / HOUR;
+  const [px, py] = polar(RT, tod * 15);
   pip.setAttribute("cx", px.toFixed(2)); pip.setAttribute("cy", py.toFixed(2));
 }
 
 function renderReadout(st) {
   if (!st) return;
-  const k = hoverHr || selHr || (st.phase === "done" ? 24 : st.phase === "live" ? st.j + 1 : st.d.off + 1);
+  let k = hoverHr || selHr || (st.phase === "done" ? M.L : st.phase === "live" ? st.j + 1 : 1);
+  k = Math.max(1, Math.min(M.L, k));
   const h = hourInfo(st.d, k), s = hourStatus(st, k);
   const isGoal = M.goal && M.goal.day === st.di && M.goal.hr === k;
   const reTx = pctTx(100 - P.wd), wdTx = pctTx(P.wd);
   $("readout").innerHTML =
-    `<div class="ro-head"><span class="ro-hr">HR ${pad(k)}</span><span class="ro-time">${fT.format(h.from)} – ${fT.format(h.to)}</span>` +
+    `<div class="ro-head"><span class="ro-hr">HR ${pad(k)} / ${pad(M.L)}</span><span class="ro-time">${fT.format(h.from)} – ${fT.format(h.to)}</span>` +
     `<span class="pill ${s}">${ST_LABEL[s]}</span>${isGoal ? '<span class="pill gold">★ Goal hour</span>' : ""}` +
     (selHr ? '<button type="button" class="linkish" id="roNow">Back to now</button>' : "") + `</div>` +
     `<div class="kvs">` +
     `<div class="kv"><span>Start</span><b>${usd.format(h.start)}</b></div>` +
     `<div class="kv"><span>End</span><b>${usd.format(h.end)}</b></div>` +
-    `<div class="kv"><span>Earned</span><b>${usd.format(h.earned)}</b></div>` +
+    `<div class="kv"><span>Hourly target</span><b>${usd.format(h.earned)}</b><small>÷ ${M.L} of ${usd.format(st.d.profit)}</small></div>` +
     `<div class="kv"><span>Reinvest ${reTx}</span><b>${usd.format(h.re)}</b></div>` +
     `<div class="kv"><span>Withdraw ${wdTx}</span><b>${usd.format(h.wd)}</b></div>` +
     `</div>`;
@@ -698,19 +981,90 @@ function renderReadout(st) {
 let offset = 0;
 function renderLive() {
   if (!lastSt) return;
-  const now = Date.now() + offset;
-  const st = lastSt, rel = (now - M.s) / HOUR;
-  let hf = st.phase === "live" ? Math.min(24, Math.max(0, rel - st.di * 24)) : st.hf;
-  const v = st.d.open * Math.pow(1 + M.h, Math.max(0, hf - st.d.off));
+  const now = Date.now() + offset, st = lastSt, d = st.d;
+  const v = st.phase === "live" ? d.open + d.per * Math.min(M.L, Math.max(0, (now - d.t) / HOUR)) : st.live;
   const s = usd.format(v);
   $("liveMain").textContent = s.slice(0, -3);
   $("liveCents").textContent = s.slice(-3);
   $("liveMicro").textContent = pad(Math.floor((v * 10000) % 100));
-  $("earned").textContent = `+${usd.format(v - st.d.open)} today`;
+  $("earned").textContent = st.phase === "done" ? "Final balance after the last payout" : `+${usd.format(v - d.open)} this shift`;
+  $("sideBal").textContent = s;
+}
+
+/* ---------- side clock: analog (sweeping second hand) + digital with seconds ---------- */
+const H12 = 12 * HOUR;
+let reduceMotion = false;
+try { reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+const aPolar = (r, deg) => { const t = (deg - 90) * Math.PI / 180; return [100 + r * Math.cos(t), 100 + r * Math.sin(t)]; };
+function buildAnalog() {
+  const g = $("aTicks");
+  for (let i = 0; i < 60; i++) {
+    const hr = i % 5 === 0, [x0, y0] = aPolar(hr ? 80 : 85, i * 6), [x1, y1] = aPolar(89, i * 6);
+    el("line", { x1: x0.toFixed(2), y1: y0.toFixed(2), x2: x1.toFixed(2), y2: y1.toFixed(2), class: "a-tick" + (hr ? " h" : "") }, g);
+  }
+  for (let n = 1; n <= 12; n++) {
+    const [x, y] = aPolar(68, n * 30);
+    const t = el("text", { x: x.toFixed(1), y: y.toFixed(1), class: "a-num" + (n % 3 === 0 ? " q" : "") }, g);
+    t.textContent = n;
+  }
+}
+const hms = (ms) => {
+  const tot = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(tot / 86400), h = Math.floor(tot % 86400 / 3600), m = Math.floor(tot % 3600 / 60), s = tot % 60;
+  return d ? `${d}d ${pad(h)}:${pad(m)}:${pad(s)}` : `${h}:${pad(m)}:${pad(s)}`;
+};
+// the shift on the 12-hour face: solid while working, dashed when it starts within the next 12 hours
+function renderAnalogArc(st, now) {
+  const d = st.d, path = $("aShift");
+  let a = null;
+  if (st.phase === "live") a = [d.t, d.e];
+  else if (st.phase === "wait" && d.t - now < H12) a = [d.t, Math.min(d.e, now + H12)];
+  if (!a || a[1] <= a[0]) { path.setAttribute("d", ""); return; }
+  const ang = (ms) => (((ms % H12) + H12) % H12) / H12 * 360;
+  const a0 = ang(a[0]), sweep = Math.min(359.5, (a[1] - a[0]) / H12 * 360);
+  const [x0, y0] = aPolar(93, a0), [x1, y1] = aPolar(93, a0 + sweep);
+  path.setAttribute("d", `M${x0.toFixed(2)} ${y0.toFixed(2)}A93 93 0 ${sweep > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`);
+  path.setAttribute("class", "a-shift" + (st.phase === "live" ? "" : " wait"));
+}
+let lastSec = -1;
+function renderClock() {
+  const now = Date.now() + offset, tod = ((now % DAY) + DAY) % DAY;
+  const secF = reduceMotion ? Math.floor(tod / 1000) % 60 : (tod / 1000) % 60;
+  $("aSec").setAttribute("transform", `rotate(${(secF * 6).toFixed(2)} 100 100)`);
+  $("aMin").setAttribute("transform", `rotate(${((tod / 60000) % 60 * 6).toFixed(2)} 100 100)`);
+  $("aHour").setAttribute("transform", `rotate(${((tod / HOUR) % 12 * 30).toFixed(2)} 100 100)`);
+  const sec = Math.floor(now / 1000);
+  if (sec === lastSec || !lastSt) return;
+  lastSec = sec;
+  const parts = fClk.formatToParts(now);
+  const ap = (parts.find((p) => p.type === "dayPeriod") || { value: "" }).value;
+  const hm = parts.filter((p) => p.type !== "dayPeriod").map((p) => p.value).join("").trim();
+  $("clock").innerHTML = `${hm}<small>${ap}</small>`;
+  $("aAp").textContent = ap;
+  const h24 = Math.floor(tod / HOUR), m24 = Math.floor(tod / 60000) % 60, s24 = Math.floor(tod / 1000) % 60;
+  $("clock24").textContent = `${pad(h24)}:${pad(m24)}:${pad(s24)} · 24-hour`;
+  $("clockDate").textContent = fLong.format(now);
+  $("analog").setAttribute("aria-label", `Analog clock showing ${hm} ${ap}, New York time`);
+  const st = lastSt, d = st.d;
+  $("sideShift").dataset.phase = st.phase;
+  if (st.phase === "live") {
+    const j = Math.min(M.L, Math.floor((now - d.t) / HOUR));
+    $("sideK").textContent = "On shift · ends in";
+    $("sideCount").textContent = hms(d.e - now);
+    $("sideSub").textContent = `Day ${d.i + 1} · hour ${Math.min(M.L, j + 1)} of ${M.L} · ${shiftTx(d)}`;
+  } else if (st.phase === "wait") {
+    $("sideK").textContent = "Next shift starts in";
+    $("sideCount").textContent = hms(d.t - now);
+    $("sideSub").textContent = `Day ${d.i + 1} · ${fDay.format(d.date)} · ${shiftTx(d)}`;
+  } else {
+    $("sideK").textContent = "Run complete";
+    $("sideCount").textContent = "—";
+    $("sideSub").textContent = `Last payout ${fDay.format(d.e)} · ${fT.format(d.e)}`;
+  }
+  renderAnalogArc(st, now);
 }
 let lastFrame = 0;
 function frame(t) {
-  if (t - lastFrame > 90) { lastFrame = t; renderLive(); }
+  if (t - lastFrame > 90) { lastFrame = t; renderLive(); renderClock(); }
   requestAnimationFrame(frame);
 }
 
@@ -721,40 +1075,65 @@ function dur(ms) {
   return d ? `${d}d ${pad(h)}h ${pad(m)}m` : `${h}h ${pad(m)}m`;
 }
 function renderTop(st, tz) {
-  const parts = fClk.formatToParts(st.now);
-  const ap = (parts.find((p) => p.type === "dayPeriod") || { value: "" }).value;
-  const hms = parts.filter((p) => p.type !== "dayPeriod").map((p) => p.value).join("").trim();
-  $("clock").innerHTML = `${hms}<small>${ap}</small>`;
-  $("clockDate").textContent = fLong.format(st.now);
+  const d = st.d;
   $("tz").textContent = tz;
   $("chDay").textContent = `${pad(st.di + 1)} / ${pad(M.D)}`;
-  $("chHr").textContent = st.phase === "live" ? `${pad(st.j + 1)} / 24` : st.phase === "done" ? "24 / 24" : "— / 24";
-  $("chRate").textContent = `${pctTx(P.rate)}/hr · ${(M.g * 100).toFixed(2)}%/day`;
-  const chs = $("chState"); chs.dataset.phase = st.phase;
-  $("chStateTx").textContent = st.phase === "live" ? "Compounding" : st.phase === "pending" ? `Starts ${fDay.format(M.t0)} · ${fT.format(M.t0)}` : "Run complete";
+  $("chShift").textContent = shiftTx(d);
+  $("chHr").textContent = st.phase === "live" ? `${st.j + 1} / ${M.L}` : st.phase === "done" ? `${M.L} / ${M.L}` : `— / ${M.L}`;
+  $("chRate").textContent = `${pctTx(P.daily)}/day ÷ ${M.L} = ${pct3(P.daily / M.L)}/hr`;
+  $("dialTitle").textContent = `Day ${d.i + 1} shift · ${shiftTx(d)}`;
+  const chs = $("chState"); chs.dataset.phase = st.phase === "wait" ? "pending" : st.phase;
+  const sameDate = Math.floor(st.now / DAY) === Math.floor(d.t / DAY);
+  $("chStateTx").textContent = st.phase === "live" ? "On shift" :
+    st.phase === "done" ? "Run complete" :
+    st.di === 0 ? `Starts ${fDay.format(M.t0)} · ${fT.format(M.t0)}` : `Resting · back ${sameDate ? "" : fDay.format(d.t) + " · "}${fT.format(d.t)}`;
   let next;
   if (st.phase === "live") {
     const left = Math.max(0, Math.round((st.j + 1 - st.hf) * 3600));
-    next = `Next step in ${pad(Math.floor(left / 60))}:${pad(left % 60)}`;
-  } else if (st.phase === "pending") next = `Starts in ${dur(M.t0 - st.now)}`;
-  else next = "All days complete";
+    next = `Hr ${st.j + 1} of ${M.L} · next step in ${pad(Math.floor(left / 60))}:${pad(left % 60)}`;
+  } else if (st.phase === "wait") next = `Shift starts in ${dur(d.t - st.now)}`;
+  else next = "All shifts complete";
   $("nextLine").textContent = next;
 }
+let lgKey = "";
 function renderLedger(st) {
   const d = st.d;
-  $("ledgerDate").textContent = fDay.format(d.date);
-  $("lgOpenAt").textContent = fT.format(d.date + d.off * HOUR);
+  $("ledgerDate").textContent = `${fDay.format(d.date)} · ${shiftTx(d)}`;
+  const k = `${ver}|${d.i}`;
+  if (k !== lgKey) {
+    lgKey = k;
+    const sel = $("lgStart");
+    sel.dataset.start = d.key;
+    sel.innerHTML = optsHtml(d.want);
+    sel.classList.toggle("custom", d.custom);
+    sel.setAttribute("aria-label", `Start time for day ${d.i + 1}, ${fDay.format(d.date)}`);
+    $("lgStartK").textContent = `Day ${d.i + 1} · ${fDay.format(d.date)} starts at`;
+    const push = $("lgPush");
+    push.hidden = !d.pushed;
+    push.textContent = d.pushed ? `→ starts ${fT.format(d.t)}, when day ${d.i}'s shift ends` : "";
+  }
+  $("lgOpenAt").textContent = fT.format(d.t);
   $("lgOpen").textContent = usd.format(d.open);
-  $("lgStepLabel").innerHTML = st.phase === "pending" ? "At start <small>no hours yet</small>" : `At ${fT.format(d.date + st.j * HOUR)} <small>last full hour</small>`;
+  $("lgStepLabel").innerHTML = st.phase === "live" ? `At ${fT.format(d.t + st.j * HOUR)} <small>last full hour</small>` :
+    st.phase === "done" ? `At ${fT.format(d.e)} <small>end of shift</small>` : "At start <small>shift not started</small>";
   $("lgStep").textContent = usd.format(st.stepped);
+  $("lgProfitLabel").innerHTML = `Target ${pctTx(P.daily)} <small>whole shift</small>`;
   $("lgProfit").textContent = usd.format(d.profit);
+  $("lgPerLabel").innerHTML = `Per hour <small>÷ ${M.L} hours</small>`;
+  $("lgPer").textContent = usd.format(d.per);
   $("lgReLabel").textContent = `Reinvest ${pctTx(100 - P.wd)}`;
   $("lgRe").textContent = usd.format(d.r);
-  $("lgWdLabel").innerHTML = `Withdraw ${pctTx(P.wd)} <small>paid at midnight</small>`;
+  $("lgWdLabel").innerHTML = `Withdraw ${pctTx(P.wd)} <small>paid at ${fT.format(d.e)}</small>`;
   $("lgWd").textContent = usd.format(d.w);
+  $("lgCloseLabel").textContent = `Close at ${fT.format(d.e)}`;
   $("lgClose").textContent = usd.format(d.close);
-  $("lgNext").textContent = st.phase === "live" ? dur((24 - st.hf) * HOUR) : st.phase === "pending" ? "After day 1" : "Done";
+  $("lgNext").textContent = st.phase === "done" ? "Done" : dur(d.e - st.now);
   $("lgTotal").textContent = usd.format(st.withdrawn);
+}
+function renderSplit(st) {
+  const d = st.d;
+  $("splitLine").innerHTML = `Day ${d.i + 1} · <b>${usd.format(d.open)} × ${pctTx(P.daily)} = ${usd.format(d.profit)}</b> target ` +
+    `<span>÷ ${M.L} hours =</span> <b>${usd.format(d.per)} an hour</b> <span>· ${fDay.format(d.date)} ${shiftTx(d)}</span>`;
 }
 function renderGoal(st) {
   const prog = Math.min(1, st.live / P.goal);
@@ -768,7 +1147,7 @@ function renderGoal(st) {
     $("goalTo").textContent = `${usd.format(Math.max(0, P.goal - st.live))} to go`;
     $("goalEtaK").textContent = "Not reached within these dates";
     $("goalEta").textContent = `Short by ${usd0.format(P.goal - last.close)}`;
-    $("goalWhich").textContent = `Projected close on ${fMD.format(last.date)}: ${usd.format(last.close)}`;
+    $("goalWhich").textContent = `Projected close on ${fDay.format(last.e)}, ${fT.format(last.e)}: ${usd.format(last.close)}`;
     cd.hidden = true;
     return;
   }
@@ -776,14 +1155,24 @@ function renderGoal(st) {
   const reached = st.now >= g.at;
   $("goalTo").textContent = reached ? "Goal reached" : `${usd.format(Math.max(0, P.goal - st.live))} to go`;
   $("goalEtaK").textContent = reached ? "Reached at · New York time" : "Reaches the goal at · New York time";
-  $("goalEta").textContent = `${fDay.format(g.at - HOUR)} · ${fT.format(g.at)}`;
-  $("goalWhich").textContent = `Day ${g.day + 1} · Hr ${g.hr} (${fT.format(g.at - HOUR)} – ${fT.format(g.at)})`;
+  $("goalEta").textContent = `${fDay.format(g.at)} · ${fT.format(g.at)}`;
+  $("goalWhich").textContent = `Day ${g.day + 1} · Hr ${g.hr} of ${M.L} (${fT.format(g.at - HOUR)} – ${fT.format(g.at)})`;
   const ms = Math.max(0, g.at - st.now), t = Math.floor(ms / 1000);
   $("cdD").textContent = Math.floor(t / 86400);
   $("cdH").textContent = pad(Math.floor(t % 86400 / 3600));
   $("cdM").textContent = pad(Math.floor(t % 3600 / 60));
   $("cdS").textContent = pad(t % 60);
 }
+
+/* ---------- day status ---------- */
+function dayStatus(st, i) {
+  if (st.phase === "done" || i < st.di) return "done";
+  if (i === st.di) return st.phase === "live" ? "cur" : "next";
+  return "left";
+}
+const isGoalHr = (i, k) => !!(M.goal && M.goal.day === i && M.goal.hr === k);
+const DS_LABEL = { done: "Completed", cur: "On shift", next: "Up next", left: "Remaining" };
+const timeStatus = (hs, now) => (hs + HOUR <= now ? "done" : hs <= now ? "cur" : "left");
 
 /* ---------- day map ---------- */
 function buildDays() {
@@ -794,32 +1183,37 @@ function buildDays() {
     b.type = "button"; b.className = "day left";
     const dom = new Date(d.date).getUTCDate();
     b.innerHTML = (i === 0 || dom === 1 ? `<span class="mo">${fMon.format(d.date).toUpperCase()}</span>` : "") + `<span>${dom}</span>`;
-    b.title = `Day ${i + 1} · ${fDay.format(d.date)} · close ${usd.format(d.close)}`;
+    b.title = `Day ${i + 1} · ${fDay.format(d.date)} · ${shiftTx(d)} · close ${usd.format(d.close)}`;
     b.setAttribute("aria-label", b.title);
-    b.addEventListener("click", () => { selDay = selDay === i ? null : i; if (selDay !== null) { hDaySel = selDay; if (sheetTab === "hours") renderSheet(); } refresh(); });
+    b.addEventListener("click", () => { selDay = selDay === i ? null : i; if (selDay !== null) { hDaySel = selDay; if (sheetTab === "hours") renderSheet(); } ddKey = ""; refresh(); });
     grid.appendChild(b);
   });
 }
+let ddKey = "";
 function renderDays(st) {
   const cells = $("daygrid").children;
   for (let i = 0; i < cells.length; i++) {
-    const c = cells[i];
-    let cls = "day " + (st.phase === "done" || i < st.di ? "done" : i === st.di && st.phase === "live" ? "today" : "left");
+    const c = cells[i], s = dayStatus(st, i);
+    let cls = "day " + (s === "done" ? "done" : s === "cur" ? "today" : "left") + (s === "next" ? " next" : "");
     if (M.goal && M.goal.day === i) cls += " goal";
     if (selDay === i) cls += " sel";
     if (c.className !== cls) c.className = cls;
-    if (i === st.di && st.phase === "live") c.style.setProperty("--p", (st.hf / 24 * 100).toFixed(2) + "%");
+    if (s === "cur") c.style.setProperty("--p", (st.hf / M.L * 100).toFixed(2) + "%");
   }
-  const i = selDay === null ? st.di : selDay, d = M.days[i];
-  const status = st.phase === "done" || i < st.di ? "done" : i === st.di && st.phase === "live" ? "cur" : "left";
-  const stTx = status === "done" ? "Completed" : status === "cur" ? "Today" : "Remaining";
+  const i = selDay === null || selDay >= M.D ? st.di : selDay, d = M.days[i];
+  const status = dayStatus(st, i);
+  const key = `${ver}|${i}|${status}`;
+  if (key === ddKey) return;           // only redraw when something changed, so an open picker isn't reset
+  ddKey = key;
   const isGoal = M.goal && M.goal.day === i;
   $("dayDetail").innerHTML =
-    `<div class="dd-head"><b>Day ${i + 1}</b><span>${fDay.format(d.date)}</span><span class="pill ${status}">${stTx}</span>` +
+    `<div class="dd-head"><b>Day ${i + 1}</b><span>${fDay.format(d.date)} · ${shiftTx(d)}</span><span class="pill ${status}">${DS_LABEL[status]}</span>` +
     (isGoal ? `<span class="pill gold">★ Goal at ${fT.format(M.goal.at)}</span>` : "") + `</div>` +
+    `<label class="startpick"><span>Start this day at</span>${startSelect(d)}</label>` +
     `<div class="kvs">` +
     `<div class="kv"><span>Opening</span><b>${usd.format(d.open)}</b></div>` +
-    `<div class="kv"><span>Profit</span><b>${usd.format(d.profit)}</b></div>` +
+    `<div class="kv"><span>Target</span><b>${usd.format(d.profit)}</b></div>` +
+    `<div class="kv"><span>Per hour</span><b>${usd.format(d.per)}</b></div>` +
     `<div class="kv"><span>Reinvest ${pctTx(100 - P.wd)}</span><b>${usd.format(d.r)}</b></div>` +
     `<div class="kv"><span>Withdraw ${pctTx(P.wd)}</span><b>${usd.format(d.w)}</b></div>` +
     `<div class="kv"><span>Close</span><b>${usd.format(d.close)}</b></div>` +
@@ -832,7 +1226,10 @@ function drawChart(st) {
   const box = $("chart");
   const W = Math.max(300, Math.round(box.clientWidth || 800)), H = W < 560 ? 230 : 300;
   const m = { l: 56, r: 14, t: 22, b: 28 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
-  const pts = [[M.off0 / 24, P.bal]].concat(M.days.map((d) => [d.i + 1, d.close]));
+  const tx = (ms) => (ms - M.s) / DAY;
+  const pts = [];
+  for (const d of M.days) pts.push([tx(d.t), d.open], [tx(d.e), d.open + d.profit], [tx(d.e), d.close]);
+  const T = tx(M.tEnd);
   const ys = pts.map((p) => p[1]);
   const maxY = Math.max(Math.max.apply(null, ys), P.goal), minY = Math.min.apply(null, ys);
   let y, ticks = [];
@@ -845,9 +1242,9 @@ function drawChart(st) {
     y = (v) => m.t + ih - v / top * ih;
     for (let v = 0; v <= top + step / 2; v += step) ticks.push(v);
   }
-  const x = (t) => m.l + t / M.D * iw;
+  const x = (t) => m.l + t / T * iw;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img",
-    "aria-label": `Projected balance from ${usd0.format(P.bal)} to ${usd0.format(M.days[M.D - 1].close)} over ${M.D} days` });
+    "aria-label": `Projected balance from ${usd0.format(P.bal)} to ${usd0.format(M.days[M.D - 1].close)} over ${M.D} days of ${M.L}-hour shifts` });
   const defs = el("defs", {}, svg);
   const lg = el("linearGradient", { id: "gArea", x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
   el("stop", { offset: 0, style: "stop-color:var(--ion);stop-opacity:.30" }, lg);
@@ -860,26 +1257,23 @@ function drawChart(st) {
     t.textContent = v === 0 ? "$0" : usdC.format(v);
   }
   const xStep = W < 560 ? 14 : 7;
-  for (let t = 0; t <= M.D; t += xStep) {
+  for (let t = 0; t <= T; t += xStep) {
     const xx = x(t);
     if (xx > W - m.r - 16 && t !== 0) continue;
     el("line", { x1: xx.toFixed(1), x2: xx.toFixed(1), y1: m.t + ih, y2: m.t + ih + 4, class: "gridl" }, svg);
-    const tx = el("text", { x: xx.toFixed(1), y: H - 8, class: "ax", "text-anchor": t === 0 ? "start" : "middle" }, svg);
-    tx.textContent = fMD.format(M.s + t * DAY);
+    const tl = el("text", { x: xx.toFixed(1), y: H - 8, class: "ax", "text-anchor": t === 0 ? "start" : "middle" }, svg);
+    tl.textContent = fMD.format(M.s + t * DAY);
   }
 
-  const nowT = Math.max(pts[0][0], Math.min(M.D, st.rel / 24));
-  const i0 = Math.min(M.D - 1, Math.floor(nowT));
-  const y0v = pts[i0][1], y1v = pts[Math.min(pts.length - 1, i0 + 1)][1];
-  const fr = i0 === 0 ? (nowT - pts[0][0]) / (1 - pts[0][0]) : nowT - i0;
-  const nowV = y0v * Math.pow(y1v / y0v, fr);
+  const nowMs = Math.max(M.t0, Math.min(M.tEnd, st.now));
+  const nowT = tx(nowMs), nowV = balAt(nowMs);
   const P2 = (t, v) => `${x(t).toFixed(1)},${y(v).toFixed(1)}`;
   const past = pts.filter((p) => p[0] <= nowT).map((p) => P2(p[0], p[1]));
   past.push(P2(nowT, nowV));
   const future = [P2(nowT, nowV)].concat(pts.filter((p) => p[0] > nowT).map((p) => P2(p[0], p[1])));
   const base = (m.t + ih).toFixed(1);
   const all = pts.map((p) => P2(p[0], p[1]));
-  el("path", { d: `M${x(pts[0][0]).toFixed(1)},${base}L${all.join("L")}L${x(M.D).toFixed(1)},${base}Z`, class: "area", fill: "url(#gArea)" }, svg);
+  el("path", { d: `M${x(pts[0][0]).toFixed(1)},${base}L${all.join("L")}L${x(T).toFixed(1)},${base}Z`, class: "area", fill: "url(#gArea)" }, svg);
 
   const gy = y(P.goal).toFixed(1);
   el("line", { x1: m.l, x2: W - m.r, y1: gy, y2: gy, class: "goal-ln" }, svg);
@@ -890,11 +1284,11 @@ function drawChart(st) {
   if (past.length > 1) el("path", { d: "M" + past.join("L"), class: "ln-solid" }, svg);
 
   if (M.goal) {
-    const gx = x(M.goal.day + M.goal.hr / 24);
+    const gx = x(tx(M.goal.at));
     el("circle", { cx: gx.toFixed(1), cy: gy, r: 9, class: "ghalo" }, svg);
     el("circle", { cx: gx.toFixed(1), cy: gy, r: 4.5, class: "gdot" }, svg);
     const lt = el("text", { x: (gx - 12).toFixed(1), y: (+gy - 14).toFixed(1), class: "goal-tx", "text-anchor": "end" }, svg);
-    lt.textContent = `★ ${fMD.format(M.goal.at - HOUR).toUpperCase()}`;
+    lt.textContent = `★ ${fMD.format(M.goal.at).toUpperCase()}`;
   }
   const nx = x(nowT), ny = y(nowV);
   el("line", { x1: nx.toFixed(1), x2: nx.toFixed(1), y1: m.t, y2: m.t + ih, class: "now-ln" }, svg);
@@ -907,36 +1301,54 @@ function drawChart(st) {
 }
 
 /* ---------- parameters ---------- */
-const F = { bal: $("pBal"), goal: $("pGoal"), rate: $("pRate"), wd: $("pWd"), start: $("pStart"), hr: $("pHr"), end: $("pEnd") };
-F.hr.innerHTML = Array.from({ length: 24 }, (_, n) => `<option value="${n}">${fT.format(Date.UTC(2000, 0, 1, n))}</option>`).join("");
-const subTx = () => `Projection · ${usd0.format(P.bal)} → ${gFmt(P.goal)} · ${pctTx(P.rate)} per hour · from ${fMD.format(M.t0)}, ${fT.format(M.t0)} · reinvest ${pctTx(100 - P.wd)} / withdraw ${pctTx(P.wd)}`;
+const F = { bal: $("pBal"), goal: $("pGoal"), daily: $("pDaily"), wd: $("pWd"), defStart: $("pDef"), len: $("pLen"), start: $("pStart"), end: $("pEnd") };
+F.defStart.innerHTML = optsHtml(-1);
+const subTx = () => `Projection · ${usd0.format(P.bal)} → ${gFmt(P.goal)} · ${pctTx(P.daily)} a day ÷ ${M.L} hrs = ${pct3(P.daily / M.L)} an hour · start time picked per day (default ${hourTx(P.defStart)}) · from ${fMD.format(M.s)} · reinvest ${pctTx(100 - P.wd)} / withdraw ${pctTx(P.wd)}`;
 function fillForm() { for (const k in F) F[k].value = P[k]; }
 function readForm() {
-  const v = { bal: parseFloat(F.bal.value), goal: parseFloat(F.goal.value), rate: parseFloat(F.rate.value), wd: parseFloat(F.wd.value), start: F.start.value, hr: parseInt(F.hr.value, 10), end: F.end.value };
+  const v = { bal: parseFloat(F.bal.value), goal: parseFloat(F.goal.value), daily: parseFloat(F.daily.value), wd: parseFloat(F.wd.value),
+    defStart: parseInt(F.defStart.value, 10), len: Number(F.len.value), start: F.start.value, end: F.end.value };
   const bad = {}; let msg = "";
   const flag = (k, t) => { bad[k] = true; if (!msg) msg = t; };
   if (!(v.bal > 0)) flag("bal", "Starting balance must be more than $0.");
   if (!(v.goal > 0)) flag("goal", "Goal must be more than $0.");
-  if (!(v.rate > 0 && v.rate < 100)) flag("rate", "Growth per hour must be between 0% and 100%.");
+  if (!(v.daily > 0 && v.daily <= 1000)) flag("daily", "Daily target must be more than 0% and at most 1000%.");
   if (!(v.wd >= 0 && v.wd <= 100)) flag("wd", "Withdraw share must be between 0% and 100%.");
-  if (!(v.hr >= 0 && v.hr <= 23)) flag("hr", "Pick a start time.");
+  if (!(v.defStart >= 0 && v.defStart <= 23)) flag("defStart", "Pick a default start time.");
+  if (!(Number.isInteger(v.len) && v.len >= 1 && v.len <= 24)) flag("len", "Hours per shift must be a whole number from 1 to 24.");
   const s = parseDate(v.start), e = parseDate(v.end);
-  if (isNaN(s)) flag("start", "Pick a start date.");
-  if (isNaN(e) || (!isNaN(s) && e <= s)) flag("end", "The end must be at least one day after the start.");
+  if (isNaN(s)) flag("start", "Pick the date of the first shift.");
+  if (isNaN(e) || (!isNaN(s) && e < s)) flag("end", "The last shift can't be before the first one.");
   else if (!isNaN(s) && (e - s) / DAY > 3650) flag("end", "Keep the range under 10 years.");
   for (const k in F) F[k].setAttribute("aria-invalid", bad[k] ? "true" : "false");
   $("perr").textContent = msg;
   return msg ? null : v;
 }
-function rebuild() {
-  build(); buildDays(); buildDaySelect();
-  selDay = null; selHr = null; hDaySel = null; sheetKey = "";
+function renderStatic() {
   $("sub").textContent = subTx();
+  $("daysNote").textContent = `All 24 hours of each date, New York time. Pick when each day's ${M.L}-hour shift starts in the Start column. Work hours add that day's target ÷ ${M.L}; rest hours hold the balance. Red = completed · Green = remaining · Gold line = payout · Gold ★ = goal hour. Tap a row to open its hours.`;
+  $("planNote").textContent = `Each day's shift ends ${M.L} hours after it starts, and the withdraw share of that shift's profit is paid out then. The rest stays in and sets the next day's target. Tap a day to see its hours.`;
+  $("pDerived").textContent = `${pctTx(P.daily)} ÷ ${M.L} hours = ${pct3(P.daily / M.L)} of the day's opening balance each hour · ${usd.format(M.days[0].per)} an hour on day 1.`;
+  const n = M.days.filter((d) => d.custom).length, moved = M.days.filter((d) => d.pushed).length;
+  $("custTx").textContent = (n ? `${n} of ${M.D} days have their own start time; the rest start at ${hourTx(P.defStart)}.` :
+    `Every day starts at ${hourTx(P.defStart)}. Pick a different time for any day in the spreadsheet, the shift ledger or the day map.`) +
+    (moved ? ` ${moved} ${moved === 1 ? "day starts" : "days start"} later than picked because the shift before runs into it.` : "");
+  $("clearStarts").hidden = !Object.keys(P.starts).length;
+}
+function rebuild(keep) {
+  build(); buildDays(); buildDaySelect();
+  if (!keep) { selDay = null; hDaySel = null; }
+  selHr = null; hoverHr = null; sheetKey = ""; ddKey = ""; lgKey = ""; dialFor = "";
+  renderStatic();
   tick(); drawChart(lastSt);
 }
-$("params").addEventListener("input", () => { const v = readForm(); if (v) { P = v; save(); rebuild(); } });
+$("params").addEventListener("input", (e) => {
+  if (e.target && e.target.closest && e.target.closest("select[data-start]")) return;
+  const v = readForm(); if (v) { P = { ...v, starts: P.starts }; save(); rebuild(); }
+});
 $("params").addEventListener("submit", (e) => e.preventDefault());
-$("reset").addEventListener("click", () => { P = { ...DEF }; fillForm(); readForm(); save(); rebuild(); });
+$("reset").addEventListener("click", () => { P = clean(null); fillForm(); readForm(); save(); rebuild(); });
+$("clearStarts").addEventListener("click", () => { P.starts = {}; save(); rebuild(true); });
 function setScale(s) {
   scale = s;
   $("scLin").setAttribute("aria-pressed", String(s === "lin"));
@@ -946,100 +1358,115 @@ function setScale(s) {
 $("scLin").addEventListener("click", () => setScale("lin"));
 $("scLog").addEventListener("click", () => setScale("log"));
 
-/* ---------- spreadsheet views ---------- */
+/* ---------- spreadsheet views (rows are calendar dates, 24 hours each) ---------- */
 let sheetTab = "days", hView = "one", hDaySel = null, sheetKey = "";
 try { const t = localStorage.getItem(KEY + ":tab"); if (t === "days" || t === "hours" || t === "plan") sheetTab = t; } catch (e) {}
 const TABS = { days: [$("tabDays"), $("pnDays"), $("wrapDays")], hours: [$("tabHours"), $("pnHours"), $("wrapHours")], plan: [$("tabPlan"), $("pnPlan"), $("wrapPlan")] };
-const pctFmt = (v) => (v * 100 >= 10 ? (v * 100).toFixed(1) : (v * 100).toFixed(2)) + "%";
-function slot(k) {
-  const f = (h) => { h %= 24; return { n: h % 12 === 0 ? 12 : h % 12, ap: h < 12 ? "AM" : "PM" }; };
-  const a = f(k - 1), b = f(k);
-  return a.ap === b.ap ? `${a.n}–${b.n} ${b.ap}` : `${a.n} ${a.ap}–${b.n} ${b.ap}`;
-}
-function cellStatus(st, i, k) {
-  if (k <= M.days[i].off) return "pre";
-  if (st.phase === "done" || (st.phase === "live" && i < st.di)) return "done";
-  if (st.phase === "pending" || i > st.di) return "left";
-  return hourStatus(st, k);
-}
-function dayStatus(st, i) {
-  if (st.phase === "done" || (st.phase === "live" && i < st.di)) return "done";
-  if (st.phase === "live" && i === st.di) return "cur";
-  return "left";
-}
-const isGoalHr = (i, k) => !!(M.goal && M.goal.day === i && M.goal.hr === k);
-const DS_LABEL = { done: "Completed", cur: "Today", left: "Remaining" };
-const selectedDay = (st) => Math.max(0, Math.min(M.D - 1, hDaySel === null ? st.di : hDaySel));
+const rowOf = (ms) => Math.floor((ms - M.s) / DAY);
+const rowNow = (st) => Math.max(0, Math.min(M.R - 1, rowOf(st.now)));
+const selectedRow = (st) => Math.max(0, Math.min(M.R - 1, hDaySel === null ? rowNow(st) : hDaySel));
 
+function cellHtml(hs, now) {
+  const a = hourAt(hs);
+  if (a.kind === "pre" || a.kind === "post") return `<td class="c-pre">–</td>`;
+  if (a.kind === "rest") return `<td class="c-rest" title="Rest · balance holds">${usd.format(a.bal)}</td>`;
+  const g = isGoalHr(a.d.i, a.k), s = timeStatus(hs, now), last = a.k === M.L;
+  const tip = `Day ${a.d.i + 1} · hour ${a.k} of ${M.L}` + (last ? ` · payout ${usd.format(a.d.w)} at ${fT.format(a.d.e)}` : "");
+  return `<td class="c-${g ? "gold" : s}${last ? " pay" : ""}" title="${tip}">${g ? "★ " : ""}${usd.format(a.end)}</td>`;
+}
 function renderDaysTable(st) {
+  const now = st.now, today = rowOf(now);
   let tp = 0, tw = 0, tr = 0;
-  let h = `<thead><tr><th class="sc1">Day</th><th class="sc2">Date</th><th>Opening<small>12:00 AM</small></th>`;
-  for (let k = 1; k <= 24; k++) h += `<th>Hr ${k}<small>${slot(k)}</small></th>`;
-  h += `<th>Profit</th><th>Withdraw ${pctTx(P.wd)}</th><th>Reinvest ${pctTx(100 - P.wd)}</th><th>Close</th><th>Hrs done</th><th>Progress</th></tr></thead><tbody>`;
-  for (const d of M.days) {
-    const i = d.i, ds = dayStatus(st, i);
-    tp += d.profit; tw += d.w; tr += d.r;
-    let row = `<tr class="click${ds === "cur" ? " today" : ""}" data-day="${i}" tabindex="0"><td class="sc1">${i + 1}</td><td class="sc2">${fDay.format(d.date)}</td><td class="x">${usd.format(d.open)}</td>`;
-    for (let k = 1; k <= 24; k++) {
-      if (k <= d.off) { row += `<td class="c-pre">–</td>`; continue; }
-      const g = isGoalHr(i, k);
-      row += `<td class="c-${g ? "gold" : cellStatus(st, i, k)}">${g ? "★ " : ""}${usd.format(d.open * Math.pow(1 + M.h, k - d.off))}</td>`;
-    }
-    const hrs = ds === "done" ? d.n : ds === "cur" ? Math.max(0, st.j - d.off) : 0;
-    row += `<td class="x">${usd.format(d.profit)}</td><td class="x wd">${usd.format(d.w)}</td><td class="x">${usd.format(d.r)}</td><td class="x em">${usd.format(d.close)}</td><td class="x">${hrs} / ${d.n}</td><td class="x">${pctFmt(d.close / P.goal)}</td></tr>`;
+  let h = `<thead><tr><th class="sc1">Day</th><th class="sc2">Date</th><th class="stc">Start</th><th>Opening</th>`;
+  for (let c = 0; c < 24; c++) h += `<th>${hourTx(c)}<small>to ${hourTx(c + 1)}</small></th>`;
+  h += `<th>Target<small>${pctTx(P.daily)}</small></th><th>Per hour<small>÷ ${M.L}</small></th><th>Withdraw ${pctTx(P.wd)}</th><th>Reinvest ${pctTx(100 - P.wd)}</th>` +
+    `<th>Close</th><th>Payout at</th><th>Hrs done</th><th>Progress</th></tr></thead><tbody>`;
+  for (let r = 0; r < M.R; r++) {
+    const date = M.s + r * DAY, d = r < M.D ? M.days[r] : null;
+    let row = `<tr class="click${r === today ? " today" : ""}" data-row="${r}" tabindex="0"><td class="sc1">${d ? d.i + 1 : "–"}</td><td class="sc2">${fDay.format(date)}</td>`;
+    row += d ? `<td class="stc">${startSelect(d)}</td><td class="x">${usd.format(d.open)}</td>` : `<td class="stc nil">–</td><td class="x nil">–</td>`;
+    for (let c = 0; c < 24; c++) row += cellHtml(date + c * HOUR, now);
+    if (d) {
+      tp += d.profit; tw += d.w; tr += d.r;
+      const hrs = Math.max(0, Math.min(M.L, Math.floor((now - d.t) / HOUR)));
+      row += `<td class="x">${usd.format(d.profit)}</td><td class="x">${usd.format(d.per)}</td><td class="x wd">${usd.format(d.w)}</td><td class="x">${usd.format(d.r)}</td>` +
+        `<td class="x em">${usd.format(d.close)}</td><td class="x tl">${fDay.format(d.e) === fDay.format(d.date) ? "" : fDay.format(d.e) + " · "}${fT.format(d.e)}</td><td class="x">${hrs} / ${M.L}</td><td class="x">${pctFmt(d.close / P.goal)}</td></tr>`;
+    } else row += `<td colspan="8" class="x nil tl">Finishes day ${M.D}'s shift · no new shift</td></tr>`;
     h += row;
   }
   const last = M.days[M.D - 1];
-  h += `</tbody><tfoot><tr><td class="sc1">Σ</td><td class="sc2">Total</td><td colspan="25" class="nil tl">${M.D} days · ${M.hours} hours</td><td>${usd.format(tp)}</td><td class="wd">${usd.format(tw)}</td><td>${usd.format(tr)}</td><td class="em">${usd.format(last.close)}</td><td colspan="2"></td></tr></tfoot>`;
+  h += `</tbody><tfoot><tr><td class="sc1">Σ</td><td class="sc2">Total</td><td colspan="26" class="nil tl">${M.D} days · ${M.hours} working hours</td>` +
+    `<td>${usd.format(tp)}</td><td></td><td class="wd">${usd.format(tw)}</td><td>${usd.format(tr)}</td><td class="em">${usd.format(last.close)}</td><td colspan="3"></td></tr></tfoot>`;
   return h;
 }
 
 function hoursHead() {
-  return `<thead><tr><th class="sc1">Hr</th><th>Time</th><th>Start balance</th><th>Earned</th><th>Reinvest ${pctTx(100 - P.wd)}</th><th>Withdraw ${pctTx(P.wd)}</th><th>End balance</th><th>Paid out</th><th>Progress</th><th>Status</th></tr></thead>`;
+  return `<thead><tr><th class="sc1">Hr</th><th>Time</th><th>Shift</th><th>Start balance</th><th>Earned<small>target ÷ ${M.L}</small></th><th>Reinvest ${pctTx(100 - P.wd)}</th><th>Withdraw ${pctTx(P.wd)}</th><th>End balance</th><th>Paid out</th><th>Progress</th><th>Status</th></tr></thead>`;
 }
-function hourRow(st, d, k) {
-  if (k <= d.off) return `<tr class="r-pre" data-h="${d.i}-${k}"><td class="sc1">${k}</td><td class="tl">${fT.format(d.date + (k - 1) * HOUR)} – ${fT.format(d.date + k * HOUR)}</td>` +
-    `<td colspan="7" class="tl">Plan starts at ${fT.format(d.date + d.off * HOUR)}</td><td class="tl"><span class="pill pre">${ST_LABEL.pre}</span></td></tr>`;
-  const h = hourInfo(d, k), s = cellStatus(st, d.i, k), g = isGoalHr(d.i, k), paid = k === 24;
-  return `<tr class="r-${g ? "gold" : s}" data-h="${d.i}-${k}"><td class="sc1">${k}</td><td class="tl">${fT.format(h.from)} – ${fT.format(h.to)}</td>` +
-    `<td>${usd.format(h.start)}</td><td>${usd.format(h.earned)}</td><td>${usd.format(h.re)}</td><td>${usd.format(h.wd)}</td>` +
-    `<td class="em">${usd.format(h.end)}</td><td class="${paid ? "wd" : "nil"}">${paid ? usd.format(d.w) : "–"}</td>` +
-    `<td>${pctFmt(h.end / P.goal)}</td><td class="tl"><span class="pill ${s}">${ST_LABEL[s]}</span>${g ? ' <span class="pill gold">★ Goal</span>' : ""}</td></tr>`;
+function hourRow(r, c, now, sums) {
+  const hs = M.s + r * DAY + c * HOUR, a = hourAt(hs), time = `${fT.format(hs)} – ${fT.format(hs + HOUR)}`;
+  if (a.kind === "pre") return `<tr class="r-pre" data-h="${r}-${c}"><td class="sc1">·</td><td class="tl">${time}</td><td class="tl" colspan="8">Before the first shift (${fDay.format(M.t0)} · ${fT.format(M.t0)})</td><td class="tl"><span class="pill pre">Not started</span></td></tr>`;
+  if (a.kind === "post") return `<tr class="r-pre" data-h="${r}-${c}"><td class="sc1">·</td><td class="tl">${time}</td><td class="tl" colspan="8">After the last payout · final balance ${usd.format(a.bal)}</td><td class="tl"><span class="pill pre">Plan over</span></td></tr>`;
+  if (a.kind === "rest") {
+    return `<tr class="r-rest" data-h="${r}-${c}"><td class="sc1">·</td><td class="tl">${time}</td><td class="tl">Rest</td><td>${usd.format(a.bal)}</td>` +
+      `<td class="nil">–</td><td class="nil">–</td><td class="nil">–</td><td>${usd.format(a.bal)}</td><td class="nil">–</td><td>${pctFmt(a.bal / P.goal)}</td><td class="tl"><span class="pill pre">Rest</span></td></tr>`;
+  }
+  const d = a.d, s = timeStatus(hs, now), g = isGoalHr(d.i, a.k), paid = a.k === M.L;
+  if (sums) { sums.earned += d.per; sums.re += d.per * (1 - M.q); sums.wd += d.per * M.q; if (paid) sums.paid += d.w; }
+  return `<tr class="r-${g ? "gold" : s}" data-h="${r}-${c}"><td class="sc1">${a.k}</td><td class="tl">${time}</td><td class="tl">Day ${d.i + 1} · ${a.k}/${M.L}</td>` +
+    `<td>${usd.format(a.start)}</td><td>${usd.format(d.per)}</td><td>${usd.format(d.per * (1 - M.q))}</td><td>${usd.format(d.per * M.q)}</td>` +
+    `<td class="em">${usd.format(a.end)}</td><td class="${paid ? "wd" : "nil"}">${paid ? usd.format(d.w) : "–"}</td>` +
+    `<td>${pctFmt(a.end / P.goal)}</td><td class="tl"><span class="pill ${s}">${ST_LABEL[s]}</span>${g ? ' <span class="pill gold">★ Goal</span>' : ""}</td></tr>`;
 }
 function renderHours(st) {
-  const i = selectedDay(st);
-  $("hDay").value = String(i);
-  $("hPrev").disabled = i <= 0;
-  $("hNext").disabled = i >= M.D - 1;
+  const r = selectedRow(st), now = st.now;
+  $("hDay").value = String(r);
+  $("hPrev").disabled = r <= 0;
+  $("hNext").disabled = r >= M.R - 1;
   $("hOne").setAttribute("aria-pressed", String(hView === "one"));
   $("hAll").setAttribute("aria-pressed", String(hView === "all"));
   let h = hoursHead() + "<tbody>";
   if (hView === "one") {
-    const d = M.days[i], ds = dayStatus(st, i);
-    $("hSum").innerHTML =
-      `<div class="dd-head"><b>Day ${i + 1}</b><span>${fLong.format(d.date)}</span><span class="pill ${ds}">${DS_LABEL[ds]}</span>` +
-      (M.goal && M.goal.day === i ? `<span class="pill gold">★ Goal at ${fT.format(M.goal.at)}</span>` : "") + `</div>` +
-      `<div class="kvs">` +
-      `<div class="kv"><span>Opening</span><b>${usd.format(d.open)}</b></div>` +
-      `<div class="kv"><span>Profit</span><b>${usd.format(d.profit)}</b></div>` +
-      `<div class="kv"><span>Reinvest ${pctTx(100 - P.wd)}</span><b>${usd.format(d.r)}</b></div>` +
-      `<div class="kv"><span>Withdraw ${pctTx(P.wd)}</span><b class="gold-t">${usd.format(d.w)}</b><small>paid ${fDay.format(d.date + DAY)} · 12:00 AM</small></div>` +
-      `<div class="kv"><span>Close</span><b>${usd.format(d.close)}</b></div>` +
-      `</div>`;
-    for (let k = 1; k <= 24; k++) h += hourRow(st, d, k);
-    h += `</tbody><tfoot><tr><td class="sc1">Σ</td><td class="tl">Day total</td><td>${usd.format(d.open)}</td><td>${usd.format(d.profit)}</td><td>${usd.format(d.r)}</td><td class="wd">${usd.format(d.w)}</td><td class="em">${usd.format(d.open + d.profit)}</td><td class="wd">${usd.format(d.w)}</td><td>${pctFmt(d.close / P.goal)}</td><td class="tl">Close ${usd.format(d.close)}</td></tr></tfoot>`;
+    const date = M.s + r * DAY, d = r < M.D ? M.days[r] : null, prev = r > 0 ? M.days[r - 1] : null;
+    const notes = [];
+    if (prev && prev.e > date) notes.push(`Until ${fT.format(prev.e)} this date finishes day ${prev.i + 1}'s shift.`);
+    if (d && d.e > date + DAY) notes.push(`Hours ${Math.round((date + DAY - d.t) / HOUR) + 1}–${M.L} of this shift fall on ${fDay.format(date + DAY)}.`);
+    if (d) {
+      const ds = dayStatus(st, d.i);
+      $("hSum").innerHTML =
+        `<div class="dd-head"><b>Day ${d.i + 1}</b><span>${fLong.format(d.date)} · ${shiftTx(d)}</span><span class="pill ${ds}">${DS_LABEL[ds]}</span>` +
+        (M.goal && M.goal.day === d.i ? `<span class="pill gold">★ Goal at ${fT.format(M.goal.at)}</span>` : "") + `</div>` +
+        `<label class="startpick"><span>Start this day at</span>${startSelect(d)}</label>` +
+        `<div class="kvs">` +
+        `<div class="kv"><span>Opening</span><b>${usd.format(d.open)}</b><small>${fT.format(d.t)}</small></div>` +
+        `<div class="kv"><span>Target ${pctTx(P.daily)}</span><b>${usd.format(d.profit)}</b></div>` +
+        `<div class="kv"><span>Per hour</span><b>${usd.format(d.per)}</b><small>÷ ${M.L} hours</small></div>` +
+        `<div class="kv"><span>Reinvest ${pctTx(100 - P.wd)}</span><b>${usd.format(d.r)}</b></div>` +
+        `<div class="kv"><span>Withdraw ${pctTx(P.wd)}</span><b class="gold-t">${usd.format(d.w)}</b><small>paid ${fDay.format(d.e)} · ${fT.format(d.e)}</small></div>` +
+        `<div class="kv"><span>Close</span><b>${usd.format(d.close)}</b></div>` +
+        `</div>` + (notes.length ? `<p class="note top">${notes.join(" ")}</p>` : "");
+    } else {
+      $("hSum").innerHTML = `<div class="dd-head"><b>${fLong.format(date)}</b><span>No new shift</span></div>` + `<p class="note top">${notes.join(" ")} After that the plan is over.</p>`;
+    }
+    const sums = { earned: 0, re: 0, wd: 0, paid: 0 };
+    for (let c = 0; c < 24; c++) h += hourRow(r, c, now, sums);
+    const a0 = hourAt(date), a23 = hourAt(date + 23 * HOUR);
+    const startBal = a0.kind === "work" ? a0.start : a0.bal, endBal = a23.kind === "work" ? a23.end : a23.bal;
+    h += `</tbody><tfoot><tr><td class="sc1">Σ</td><td class="tl">This date</td><td class="tl">${24} hours</td><td>${usd.format(startBal)}</td><td>${usd.format(sums.earned)}</td><td>${usd.format(sums.re)}</td><td class="wd">${usd.format(sums.wd)}</td>` +
+      `<td class="em">${usd.format(endBal)}</td><td class="wd">${sums.paid ? usd.format(sums.paid) : "–"}</td><td>${pctFmt(endBal / P.goal)}</td><td class="tl">Balance at midnight</td></tr></tfoot>`;
   } else {
     let tp = 0, tw = 0;
     for (const d of M.days) { tp += d.profit; tw += d.w; }
-    const doneHrs = st.phase === "done" ? M.hours : st.phase === "pending" ? 0 : Math.max(0, st.di * 24 + st.j - M.off0);
+    const doneHrs = st.phase === "done" ? M.hours : st.di * M.L + (st.phase === "live" ? st.j : 0);
     $("hSum").innerHTML = `<div class="kvs">` +
       `<div class="kv"><span>Hours completed</span><b>${doneHrs} / ${M.hours}</b></div>` +
       `<div class="kv"><span>Total earned</span><b>${usd.format(tp)}</b></div>` +
       `<div class="kv"><span>Total withdrawn</span><b class="gold-t">${usd.format(tw)}</b></div>` +
       `<div class="kv"><span>Final close</span><b>${usd.format(M.days[M.D - 1].close)}</b></div></div>`;
-    for (const d of M.days) {
-      h += `<tr class="dayhead" id="hd-${d.i}"><td colspan="10"><span>DAY ${d.i + 1} · ${fDay.format(d.date)} · Opening ${usd.format(d.open)} · Withdraw ${usd.format(d.w)} at midnight · Close ${usd.format(d.close)}</span></td></tr>`;
-      for (let k = 1; k <= 24; k++) h += hourRow(st, d, k);
+    for (let rr = 0; rr < M.R; rr++) {
+      const date = M.s + rr * DAY, d = rr < M.D ? M.days[rr] : null;
+      h += `<tr class="dayhead" id="hd-${rr}"><td colspan="11"><span>${d ? `DAY ${d.i + 1} · ${fDay.format(date)} · shift ${shiftTx(d)} · Opening ${usd.format(d.open)} · ${usd.format(d.per)} an hour · Withdraw ${usd.format(d.w)} at ${fT.format(d.e)} · Close ${usd.format(d.close)}` : `${fDay.format(date)} · finishes day ${M.D}'s shift`}</span></td></tr>`;
+      for (let c = 0; c < 24; c++) h += hourRow(rr, c, now, null);
     }
     h += "</tbody>";
   }
@@ -1048,27 +1475,27 @@ function renderHours(st) {
 
 function renderPlan(st) {
   let cum = 0, paid = 0, left = 0, next = null, tp = 0, tw = 0, tr = 0, rows = "";
+  const LAB = { done: "Paid", cur: "On shift", next: "Up next", left: "Scheduled" };
   for (const d of M.days) {
     const s = dayStatus(st, d.i);
     cum += d.w; tp += d.profit; tw += d.w; tr += d.r;
     if (s === "done") paid += d.w; else { left++; if (!next) next = d; }
-    const lab = s === "done" ? "Paid" : s === "cur" ? "Tonight" : "Scheduled";
     const g = M.goal && M.goal.day === d.i;
-    rows += `<tr class="r-${s} click" data-day="${d.i}" tabindex="0"><td class="sc1">${d.i + 1}</td><td class="tl">${fDay.format(d.date)}${g ? ' <span class="star">★</span>' : ""}</td>` +
-      `<td class="tl">${fDay.format(d.date + DAY)} · 12:00 AM</td><td>${usd.format(d.profit)}</td><td class="wd">${usd.format(d.w)}</td><td>${usd.format(d.r)}</td>` +
-      `<td>${usd.format(cum)}</td><td class="em">${usd.format(d.close)}</td><td class="tl"><span class="pill ${s}">${lab}</span></td></tr>`;
+    rows += `<tr class="r-${s} click" data-row="${d.i}" tabindex="0"><td class="sc1">${d.i + 1}</td><td class="tl">${fDay.format(d.date)}${g ? ' <span class="star">★</span>' : ""}</td>` +
+      `<td class="tl">${fT.format(d.t)}${d.pushed ? " (moved)" : ""}</td><td class="tl">${fDay.format(d.e)} · ${fT.format(d.e)}</td><td>${usd.format(d.profit)}</td><td class="wd">${usd.format(d.w)}</td><td>${usd.format(d.r)}</td>` +
+      `<td>${usd.format(cum)}</td><td class="em">${usd.format(d.close)}</td><td class="tl"><span class="pill ${s}">${LAB[s]}</span></td></tr>`;
   }
   const last = M.days[M.D - 1];
   $("planSum").innerHTML =
     `<div class="kv"><span>Total withdrawals · ${M.D} days</span><b class="gold-t">${usd.format(tw)}</b></div>` +
     `<div class="kv"><span>Paid so far</span><b>${usd.format(paid)}</b></div>` +
-    `<div class="kv"><span>Next payout</span><b>${next ? usd.format(next.w) : "—"}</b><small>${next ? fDay.format(next.date + DAY) + " · 12:00 AM" : "All paid"}</small></div>` +
+    `<div class="kv"><span>Next payout</span><b>${next ? usd.format(next.w) : "—"}</b><small>${next ? fDay.format(next.e) + " · " + fT.format(next.e) : "All paid"}</small></div>` +
     `<div class="kv"><span>Payouts left</span><b>${left} of ${M.D}</b></div>` +
     `<div class="kv"><span>Total reinvested</span><b>${usd.format(tr)}</b></div>`;
   $("tblPlan").innerHTML =
-    `<thead><tr><th class="sc1">Day</th><th>Date</th><th>Payout at</th><th>Profit</th><th>Withdraw ${pctTx(P.wd)}</th><th>Reinvest ${pctTx(100 - P.wd)}</th><th>Withdrawn to date</th><th>Balance after payout</th><th>Status</th></tr></thead>` +
+    `<thead><tr><th class="sc1">Day</th><th>Date</th><th>Starts</th><th>Payout at</th><th>Target</th><th>Withdraw ${pctTx(P.wd)}</th><th>Reinvest ${pctTx(100 - P.wd)}</th><th>Withdrawn to date</th><th>Balance after payout</th><th>Status</th></tr></thead>` +
     `<tbody>${rows}</tbody>` +
-    `<tfoot><tr><td class="sc1">Σ</td><td class="tl" colspan="2">Total · ${M.D} payouts</td><td>${usd.format(tp)}</td><td class="wd">${usd.format(tw)}</td><td>${usd.format(tr)}</td><td>${usd.format(tw)}</td><td class="em">${usd.format(last.close)}</td><td></td></tr></tfoot>`;
+    `<tfoot><tr><td class="sc1">Σ</td><td class="tl" colspan="3">Total · ${M.D} payouts</td><td>${usd.format(tp)}</td><td class="wd">${usd.format(tw)}</td><td>${usd.format(tr)}</td><td>${usd.format(tw)}</td><td class="em">${usd.format(last.close)}</td><td></td></tr></tfoot>`;
 }
 
 function renderSheet() {
@@ -1086,19 +1513,21 @@ function scrollWrapTo(wrap, row, cell, leftPad) {
 function jumpToNow() {
   const st = lastSt; if (!st) return;
   const wrap = TABS[sheetTab][2];
-  const k = st.phase === "done" ? 24 : st.phase === "live" ? st.j + 1 : 1;
+  const inRange = st.now >= M.s && rowOf(st.now) < M.R;
+  const r = rowNow(st), c = Math.floor((((st.now % DAY) + DAY) % DAY) / HOUR);
   if (sheetTab === "days") {
-    const row = wrap.querySelector(`tr[data-day="${st.di}"]`);
-    const cell = row && st.phase === "live" ? row.children[2 + k] : null;
+    const row = wrap.querySelector(`tr[data-row="${r}"]`);
+    const cell = row && inRange ? row.children[4 + c] : null;
     const prev = cell && cell.previousElementSibling;
-    scrollWrapTo(wrap, st.phase === "pending" ? null : row, cell, 46 + 112 + (prev ? prev.offsetWidth : 0) + 4);
+    let stick = 0;
+    if (row) for (const ch of [...row.children].slice(0, 4)) if (getComputedStyle(ch).position === "sticky") stick += ch.offsetWidth;
+    scrollWrapTo(wrap, inRange ? row : null, cell, stick + (prev ? prev.offsetWidth : 0) + 4);
   } else if (sheetTab === "hours") {
-    const i = selectedDay(st);
-    const row = i === st.di && st.phase !== "pending" ? wrap.querySelector(`tr[data-h="${i}-${k}"]`)
-      : hView === "all" ? wrap.querySelector(`#hd-${i}`) : null;
+    const sr = selectedRow(st);
+    const row = sr === r && inRange ? wrap.querySelector(`tr[data-h="${r}-${c}"]`) : hView === "all" ? wrap.querySelector(`#hd-${sr}`) : null;
     scrollWrapTo(wrap, row, null, 0);
   } else {
-    scrollWrapTo(wrap, st.phase === "pending" ? null : wrap.querySelector(`tr[data-day="${st.di}"]`), null, 0);
+    scrollWrapTo(wrap, st.phase === "wait" && st.di === 0 ? null : wrap.querySelector(`tr[data-row="${st.di}"]`), null, 0);
   }
 }
 function showTab(t) {
@@ -1111,17 +1540,22 @@ function showTab(t) {
   renderSheet(); jumpToNow();
 }
 function buildDaySelect() {
-  $("hDay").innerHTML = M.days.map((d) => `<option value="${d.i}">Day ${d.i + 1} · ${fDay.format(d.date)}</option>`).join("");
+  let o = "";
+  for (let r = 0; r < M.R; r++) {
+    const date = M.s + r * DAY, d = r < M.D ? M.days[r] : null;
+    o += `<option value="${r}">${d ? `Day ${d.i + 1} · ${fDay.format(date)} · ${shiftTx(d)}` : `${fDay.format(date)} · end of day ${M.D}'s shift`}</option>`;
+  }
+  $("hDay").innerHTML = o;
 }
-function goDay(i) {
-  hDaySel = Math.max(0, Math.min(M.D - 1, i));
+function goRow(r) {
+  hDaySel = Math.max(0, Math.min(M.R - 1, r));
   renderSheet();
   const wrap = $("wrapHours");
   if (hView === "all") scrollWrapTo(wrap, wrap.querySelector(`#hd-${hDaySel}`), null, 0);
-  else if (lastSt && hDaySel === lastSt.di && lastSt.phase === "live") jumpToNow();
+  else if (lastSt && hDaySel === rowNow(lastSt)) jumpToNow();
   else scrollWrapTo(wrap, null, null, 0);
 }
-function openDay(i) { hDaySel = i; hView = "one"; showTab("hours"); }
+function openRow(r) { hDaySel = r; hView = "one"; showTab("hours"); }
 for (const k in TABS) TABS[k][0].addEventListener("click", () => showTab(k));
 $("tabs").addEventListener("keydown", (e) => {
   const order = ["days", "hours", "plan"]; let n = order.indexOf(sheetTab);
@@ -1129,22 +1563,26 @@ $("tabs").addEventListener("keydown", (e) => {
   e.preventDefault(); showTab(order[n]); TABS[order[n]][0].focus();
 });
 $("jumpNow").addEventListener("click", () => { hDaySel = null; renderSheet(); jumpToNow(); });
-$("hDay").addEventListener("change", (e) => goDay(+e.target.value));
-$("hPrev").addEventListener("click", () => goDay(selectedDay(lastSt) - 1));
-$("hNext").addEventListener("click", () => goDay(selectedDay(lastSt) + 1));
-$("hOne").addEventListener("click", () => { hView = "one"; goDay(selectedDay(lastSt)); });
-$("hAll").addEventListener("click", () => { hView = "all"; goDay(selectedDay(lastSt)); });
+$("hDay").addEventListener("change", (e) => goRow(+e.target.value));
+$("hPrev").addEventListener("click", () => goRow(selectedRow(lastSt) - 1));
+$("hNext").addEventListener("click", () => goRow(selectedRow(lastSt) + 1));
+$("hOne").addEventListener("click", () => { hView = "one"; goRow(selectedRow(lastSt)); });
+$("hAll").addEventListener("click", () => { hView = "all"; goRow(selectedRow(lastSt)); });
 for (const id of ["tblDays", "tblPlan"]) {
-  $(id).addEventListener("click", (e) => { const tr = e.target.closest("tr[data-day]"); if (tr) openDay(+tr.dataset.day); });
+  $(id).addEventListener("click", (e) => {
+    if (e.target.closest("select, .push")) return;
+    const tr = e.target.closest("tr[data-row]"); if (tr) openRow(+tr.dataset.row);
+  });
   $(id).addEventListener("keydown", (e) => {
     if (e.key !== "Enter" && e.key !== " ") return;
-    const tr = e.target.closest("tr[data-day]"); if (!tr) return;
-    e.preventDefault(); openDay(+tr.dataset.day);
+    if (e.target.closest("select")) return;
+    const tr = e.target.closest("tr[data-row]"); if (!tr) return;
+    e.preventDefault(); openRow(+tr.dataset.row);
   });
 }
 
 /* ---------- loop ---------- */
-let tzName = "ET", lastDay = -1, lastChart = 0;
+let tzName = "ET", lastKey = "", lastChart = 0;
 function refresh() {
   const st = lastSt; if (!st) return;
   renderDial(st); renderReadout(st); renderDays(st);
@@ -1153,15 +1591,17 @@ function tick() {
   const n = nyNow();
   offset = n.ms - Date.now(); tzName = n.tz;
   const st = state(n.ms); lastSt = st;
-  renderTop(st, tzName); renderDial(st); renderReadout(st); renderLedger(st); renderGoal(st); renderDays(st); renderLive();
-  if (st.di !== lastDay || n.ms - lastChart > 30000) { lastDay = st.di; lastChart = n.ms; drawChart(st); }
-  const key = st.phase + "|" + st.di + "|" + st.j;
+  renderTop(st, tzName); renderDial(st); renderReadout(st); renderLedger(st); renderSplit(st); renderGoal(st); renderDays(st); renderLive();
+  const ck = ver + "|" + st.phase + "|" + st.di;
+  if (ck !== lastKey || n.ms - lastChart > 30000) { lastKey = ck; lastChart = n.ms; drawChart(st); }
+  const key = ver + "|" + st.phase + "|" + st.di + "|" + Math.floor(n.ms / HOUR);
   if (key !== sheetKey) { sheetKey = key; renderSheet(); }
 }
 
 fillForm();
-build(); buildDial(); buildDays(); buildDaySelect();
-$("sub").textContent = subTx();
+buildAnalog();
+build(); buildDays(); buildDaySelect();
+renderStatic();
 tick();
 showTab(sheetTab);
 setInterval(tick, 1000);
@@ -1170,6 +1610,7 @@ let rz = 0;
 const onResize = () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => lastSt && drawChart(lastSt)); };
 if ("ResizeObserver" in window) new ResizeObserver(onResize).observe($("chart"));
 else window.addEventListener("resize", onResize);
+initCloud();
 })();
 </script>
 </body>
