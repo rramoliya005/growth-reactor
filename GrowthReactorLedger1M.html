@@ -314,7 +314,7 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       </svg>
       <div>
         <h1>Growth<span>//</span>Reactor</h1>
-        <p class="sub" id="sub">Projection · $1,600 → $1,000,000 · 0.813% per hour · from Nov 25, 12:00 PM · reinvest 90% / withdraw 10%</p>
+        <p class="sub" id="sub">Projection · $1,000 → $1,000,000 · 0.95% per hour · from Nov 28, 12:00 PM · reinvest 90% / withdraw 10%</p>
       </div>
     </div>
     <div class="clock" aria-live="off">
@@ -326,9 +326,9 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
 
   <div class="chips">
     <span class="chip state" id="chState" data-phase="live"><span class="dot pulse" aria-hidden="true"></span><span id="chStateTx">Compounding</span></span>
-    <span class="chip"><em>Day</em><b id="chDay">01 / 37</b></span>
+    <span class="chip"><em>Day</em><b id="chDay">01 / 34</b></span>
     <span class="chip"><em>Hour</em><b id="chHr">16 / 24</b></span>
-    <span class="chip"><em>Rate</em><b id="chRate">0.813%/hr · 21.45%/day</b></span>
+    <span class="chip"><em>Rate</em><b id="chRate">0.95%/hr · 25.47%/day</b></span>
     <a class="chip link" href="#reactor"><em>Jump to</em><b>Live dial ↓</b></a>
     <div class="seg-toggle mode" role="group" aria-label="Display mode">
       <button type="button" id="mDay" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.2v1.9M8 12.9v1.9M1.2 8h1.9M12.9 8h1.9M3.2 3.2l1.3 1.3M11.5 11.5l1.3 1.3M3.2 12.8l1.3-1.3M11.5 4.5l1.3-1.3"/></svg>Day</button>
@@ -397,14 +397,14 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
 
     <div class="stack">
       <div class="panel ledger">
-        <div class="ph"><h2>Today's ledger</h2><span class="legend" id="ledgerDate">Wed, Nov 25</span></div>
+        <div class="ph"><h2>Today's ledger</h2><span class="legend" id="ledgerDate">Sat, Nov 28</span></div>
         <dl>
-          <dt>Opening <small id="lgOpenAt">12:00 PM</small></dt><dd id="lgOpen">$1,600.00</dd>
-          <dt id="lgStepLabel">At 3:00 PM <small>last full hour</small></dt><dd id="lgStep">$1,600.00</dd>
-          <dt>Profit today <small>full day</small></dt><dd id="lgProfit">$163.27</dd>
-          <dt id="lgReLabel">Reinvest 90%</dt><dd id="lgRe">$146.94</dd>
-          <dt id="lgWdLabel">Withdraw 10% <small>paid at midnight</small></dt><dd class="wd" id="lgWd">$16.33</dd>
-          <dt class="em">Close at midnight</dt><dd class="em" id="lgClose">$1,746.94</dd>
+          <dt>Opening <small id="lgOpenAt">12:00 PM</small></dt><dd id="lgOpen">$1,000.00</dd>
+          <dt id="lgStepLabel">At 3:00 PM <small>last full hour</small></dt><dd id="lgStep">$1,000.00</dd>
+          <dt>Profit today <small>full day</small></dt><dd id="lgProfit">$120.15</dd>
+          <dt id="lgReLabel">Reinvest 90%</dt><dd id="lgRe">$108.13</dd>
+          <dt id="lgWdLabel">Withdraw 10% <small>paid at midnight</small></dt><dd class="wd" id="lgWd">$12.01</dd>
+          <dt class="em">Close at midnight</dt><dd class="em" id="lgClose">$1,108.13</dd>
           <dt>Next payout in</dt><dd id="lgNext">9h 00m</dd>
           <dt>Withdrawn so far <small>finished days</small></dt><dd id="lgTotal">$0.00</dd>
         </dl>
@@ -413,11 +413,11 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
       <div class="panel goal">
         <div class="ph"><h2>Goal</h2><span class="pill gold" id="goalTarget">$1,000,000</span></div>
         <div class="gauge" role="progressbar" aria-label="Progress to goal" aria-valuemin="0" aria-valuemax="100" id="gauge"><div class="gauge-fill" id="gaugeFill"></div></div>
-        <div class="gauge-row"><span class="pct" id="goalPct">0.16%</span><span class="togo" id="goalTo">$998,400.00 to go</span></div>
+        <div class="gauge-row"><span class="pct" id="goalPct">0.10%</span><span class="togo" id="goalTo">$999,000.00 to go</span></div>
         <div class="eta">
           <span class="lbl" id="goalEtaK">Reaches the goal at · New York time</span>
           <span class="eta-v" id="goalEta">Thu, Dec 31 · 10:00 PM</span>
-          <span class="dimtext" id="goalWhich">Day 37 · Hr 22</span>
+          <span class="dimtext" id="goalWhich">Day 34 · Hr 22</span>
         </div>
         <div class="countdown" id="countdown">
           <div><b id="cdD">36</b><span>days</span></div>
@@ -476,8 +476,8 @@ footer{color:var(--faint);font-size:12px;text-align:center;max-width:70ch;margin
 const $ = (id) => document.getElementById(id);
 const SVGNS = "http://www.w3.org/2000/svg";
 const HOUR = 36e5, DAY = 864e5;
-const DEF = { bal: 1600, rate: 0.813, wd: 10, start: "2026-11-25", hr: 12, end: "2027-01-01", goal: 1000000 };
-const KEY = "growth-reactor-ledger:params:v12";
+const DEF = { bal: 1000, rate: 0.95, wd: 10, start: "2026-11-28", hr: 12, end: "2027-01-01", goal: 1000000 };
+const KEY = "growth-reactor-ledger:params:v14";
 
 let P = { ...DEF };
 try {
